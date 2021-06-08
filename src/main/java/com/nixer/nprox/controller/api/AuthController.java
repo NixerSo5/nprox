@@ -1,10 +1,11 @@
 package com.nixer.nprox.controller.api;
 
 import com.nixer.nprox.dto.UserLoginDto;
-import com.nixer.nprox.entity.ResponseUserToken;
-import com.nixer.nprox.entity.Role;
-import com.nixer.nprox.entity.UserDetail;
-import com.nixer.nprox.service.AuthService;
+import com.nixer.nprox.entity.common.ResponseUserToken;
+import com.nixer.nprox.entity.common.Role;
+import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.service.auth.AuthService;
+import com.nixer.nprox.tools.RedisUtil;
 import com.nixer.nprox.tools.ResultCode;
 import com.nixer.nprox.tools.ResultJson;
 import com.nixer.nprox.tools.StringUtils;
@@ -14,7 +15,6 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -31,6 +31,10 @@ public class AuthController {
     @Value("${jwt.header}")
     private String tokenHeader;
 
+
+//    @Autowired
+//    public RedisUtil redisUtil;
+
     private final AuthService authService;
 
     @Autowired
@@ -43,6 +47,14 @@ public class AuthController {
     public ResultJson<ResponseUserToken> login(@RequestBody UserLoginDto user){
         final ResponseUserToken response = authService.login(user.getUsername(), user.getPassword());
         return ResultJson.ok(response);
+    }
+
+    @GetMapping(value = "/redisTest")
+    @ApiOperation(value = "测试redis", notes = "测试")
+    public ResultJson redisTest(@RequestParam String key){
+       //String value =  redisUtil.get(key);
+     // return ResultJson.ok(value);
+        return ResultJson.ok();
     }
 
     @GetMapping(value = "/logout")

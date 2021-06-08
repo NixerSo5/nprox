@@ -1,11 +1,11 @@
-package com.nixer.nprox.service.impl;
+package com.nixer.nprox.service.auth.impl;
 
 import com.nixer.nprox.dao.AuthDao;
-import com.nixer.nprox.entity.ResponseUserToken;
-import com.nixer.nprox.entity.Role;
-import com.nixer.nprox.entity.UserDetail;
+import com.nixer.nprox.entity.common.ResponseUserToken;
+import com.nixer.nprox.entity.common.Role;
+import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.exception.CustomException;
-import com.nixer.nprox.service.AuthService;
+import com.nixer.nprox.service.auth.AuthService;
 import com.nixer.nprox.tools.JwtUtils;
 import com.nixer.nprox.tools.ResultCode;
 import com.nixer.nprox.tools.ResultJson;

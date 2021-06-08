@@ -1,4 +1,4 @@
-package com.nixer.nprox.entity;
+package com.nixer.nprox.entity.common;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

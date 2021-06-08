@@ -1,7 +1,7 @@
 package com.nixer.nprox.dao;
 
-import com.nixer.nprox.entity.Role;
-import com.nixer.nprox.entity.UserDetail;
+import com.nixer.nprox.entity.common.Role;
+import com.nixer.nprox.entity.common.UserDetail;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 

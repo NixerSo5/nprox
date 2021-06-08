@@ -1,8 +1,8 @@
-package com.nixer.nprox.service;
+package com.nixer.nprox.service.auth;
 
 
-import com.nixer.nprox.entity.ResponseUserToken;
-import com.nixer.nprox.entity.UserDetail;
+import com.nixer.nprox.entity.common.ResponseUserToken;
+import com.nixer.nprox.entity.common.UserDetail;
 
 /**
  * @author: JoeTao

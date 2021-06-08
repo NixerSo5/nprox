@@ -1,6 +1,6 @@
 package com.nixer.nprox.jwt;
 
-import com.nixer.nprox.entity.UserDetail;
+import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.tools.JwtUtils;
 import com.nixer.nprox.tools.StringUtils;
 import org.springframework.beans.factory.annotation.Value;

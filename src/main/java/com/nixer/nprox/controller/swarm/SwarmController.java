@@ -1,4 +1,4 @@
-package com.nixer.nprox.controller;
+package com.nixer.nprox.controller.swarm;
 
 
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -1,4 +1,4 @@
-package com.nixer.nprox.entity;
+package com.nixer.nprox.entity.common;
 
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

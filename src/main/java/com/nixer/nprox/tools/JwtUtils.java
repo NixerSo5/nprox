@@ -1,8 +1,8 @@
 package com.nixer.nprox.tools;
 
 import com.alibaba.fastjson.JSONObject;
-import com.nixer.nprox.entity.Role;
-import com.nixer.nprox.entity.UserDetail;
+import com.nixer.nprox.entity.common.Role;
+import com.nixer.nprox.entity.common.UserDetail;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.CompressionCodecs;
 import io.jsonwebtoken.Jwts;
