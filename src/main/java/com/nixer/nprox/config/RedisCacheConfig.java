@@ -27,8 +27,8 @@ import java.time.Duration;
 /**
  * 缓存配置-使用Lettuce客户端，手动注入配置的方式
  */
-//@Configuration
-//@EnableCaching //启用缓存
+@Configuration
+@EnableCaching //启用缓存
 public class RedisCacheConfig extends CachingConfigurerSupport {
 
     // Redis服务器地址
@@ -142,12 +142,13 @@ public class RedisCacheConfig extends CachingConfigurerSupport {
         template.setConnectionFactory(getConnectionFactory());
         //以下代码为将RedisTemplate的Value序列化方式由JdkSerializationRedisSerializer更换为Jackson2JsonRedisSerializer
         //此种序列化方式结果清晰、容易阅读、存储字节少、速度快，所以推荐更换
-        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
-        ObjectMapper om = new ObjectMapper();
-        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
-        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
-        jackson2JsonRedisSerializer.setObjectMapper(om);
-        template.setValueSerializer(jackson2JsonRedisSerializer);
+//        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);
+//        ObjectMapper om = new ObjectMapper();
+//        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+//        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+//        jackson2JsonRedisSerializer.setObjectMapper(om);
+//        template.setValueSerializer(jackson2JsonRedisSerializer);
+        template.setValueSerializer(new StringRedisSerializer());
         template.setKeySerializer(new StringRedisSerializer());//RedisTemplate对象需要指明Key序列化方式，如果声明StringRedisTemplate对象则不需要
         //template.setEnableTransactionSupport(true);//是否启用事务
         template.afterPropertiesSet();

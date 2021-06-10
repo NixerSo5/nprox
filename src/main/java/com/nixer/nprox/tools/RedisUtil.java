@@ -79,6 +79,17 @@ public class RedisUtil {
         return result.toString();
     }
 
+    public Object getClazz(final String key) {
+        Object result = null;
+        redisTemplate.setValueSerializer(new StringRedisSerializer());
+        ValueOperations<Serializable, Object> operations = redisTemplate.opsForValue();
+        result = operations.get(key);
+        if (result == null) {
+            return null;
+        }
+        return result;
+    }
+
     public <T> T objget(String key, Class<T> clazz) {
         Gson gson = new Gson();
         return gson.fromJson(get(key), clazz);

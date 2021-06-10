@@ -1,6 +1,6 @@
-package com.nixer.nprox.dto;
+package com.nixer.nprox.entity.common.dto;
 
-public class UserLoginDto {
+public class LoginDto {
     private String username;
     private String password;
 

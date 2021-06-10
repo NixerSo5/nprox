@@ -11,32 +11,34 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @Configuration
 public class CorsConfig  extends WebMvcConfigurerAdapter {
 
-    private CorsConfiguration buildConfig() {
-        CorsConfiguration corsConfiguration = new CorsConfiguration();
-        // 1允许任何域名使用
-        corsConfiguration.addAllowedOrigin("*");
-        // 2允许任何头
-        corsConfiguration.addAllowedHeader("*");
-        // 3允许任何方法（post、get等）
-        corsConfiguration.addAllowedMethod("*");
-
-        corsConfiguration.setAllowCredentials(true);
-        return corsConfiguration;
-    }
 
     @Bean
     public CorsFilter corsFilter() {
+        CorsConfiguration config = new CorsConfiguration();
+        //允许所有域名进行跨域调用
+        config.addAllowedOriginPattern("*");//替换这个
+        //允许跨越发送cookie
+        config.setAllowCredentials(true);
+        //放行全部原始头信息
+        config.addAllowedHeader("*");
+        //允许所有请求方法跨域调用
+        config.addAllowedMethod("*");
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", buildConfig());
+        source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
     }
 
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        // 设置允许跨域的路由
         registry.addMapping("/**")
+                // 设置允许跨域请求的域名------------修改此行
                 .allowedOriginPatterns("*")
+                // 是否允许证书（cookies）
                 .allowCredentials(true)
-                .allowedMethods("GET", "POST", "DELETE", "PUT")
+                // 设置允许的方法
+                .allowedMethods("*")
+                // 跨域允许时间
                 .maxAge(3600);
     }
 }

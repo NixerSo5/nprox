@@ -1,11 +1,10 @@
 package com.nixer.nprox.controller.api;
 
-import com.nixer.nprox.dto.UserLoginDto;
 import com.nixer.nprox.entity.common.ResponseUserToken;
 import com.nixer.nprox.entity.common.Role;
 import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.entity.common.dto.LoginDto;
 import com.nixer.nprox.service.auth.AuthService;
-import com.nixer.nprox.tools.RedisUtil;
 import com.nixer.nprox.tools.ResultCode;
 import com.nixer.nprox.tools.ResultJson;
 import com.nixer.nprox.tools.StringUtils;
@@ -32,9 +31,6 @@ public class AuthController {
     private String tokenHeader;
 
 
-//    @Autowired
-//    public RedisUtil redisUtil;
-
     private final AuthService authService;
 
     @Autowired
@@ -44,18 +40,11 @@ public class AuthController {
 
     @PostMapping(value = "/login")
     @ApiOperation(value = "登陆", notes = "登陆成功返回token,登陆之前请先注册账号")
-    public ResultJson<ResponseUserToken> login(@RequestBody UserLoginDto user){
+    public ResultJson<ResponseUserToken> login(@RequestBody LoginDto user){
         final ResponseUserToken response = authService.login(user.getUsername(), user.getPassword());
         return ResultJson.ok(response);
     }
 
-    @GetMapping(value = "/redisTest")
-    @ApiOperation(value = "测试redis", notes = "测试")
-    public ResultJson redisTest(@RequestParam String key){
-       //String value =  redisUtil.get(key);
-     // return ResultJson.ok(value);
-        return ResultJson.ok();
-    }
 
     @GetMapping(value = "/logout")
     @ApiOperation(value = "登出", notes = "退出登陆")
@@ -71,7 +60,7 @@ public class AuthController {
 
     @GetMapping(value = "/user")
     @ApiOperation(value = "根据token获取用户信息", notes = "根据token获取用户信息")
-    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token", required = true, dataType = "string", paramType = "header")})
+    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",required = true, dataType = "string", paramType = "header")})
     public ResultJson getUser(HttpServletRequest request){
         String token = request.getHeader(tokenHeader);
         if (token == null) {
@@ -83,13 +72,21 @@ public class AuthController {
 
     @PostMapping(value = "/sign")
     @ApiOperation(value = "用户注册")
-    public ResultJson sign(@RequestBody UserLoginDto user) {
+    public ResultJson sign(@RequestBody LoginDto user) {
         if (StringUtils.isAnyBlank(user.getUsername(), user.getPassword())) {
             return ResultJson.failure(ResultCode.BAD_REQUEST);
         }
         UserDetail userDetail = new UserDetail(user.getUsername(), user.getPassword(), Role.builder().id(1l).build());
         return ResultJson.ok(authService.register(userDetail));
     }
+
+
+
+
+
+
+
+
 //    @GetMapping(value = "refresh")
 //    @ApiOperation(value = "刷新token")
 //    public ResultJson refreshAndGetAuthenticationToken(

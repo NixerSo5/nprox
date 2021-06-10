@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.SwarmDao">
+    <insert id="saveUserNode" parameterType="com.nixer.nprox.entity.swarm.SwarmUserNode" useGeneratedKeys="true" keyProperty="id">
+        insert into swarm_user_nodes ( `userid`, `node_address`) VALUES ( #{userid}, #{node_address});
+    </insert>
+    <delete id="delUserNode">
+        delete FROM swarm_user_nodes  where userid='${userid}'  AND node_address = '${node_address}'
+    </delete>
+    <select id="getSwarmDayLastSevenDay" resultType="com.nixer.nprox.entity.swarm.SwarmDay">
+        SELECT *
+        FROM swarm_day
+        ORDER BY ctime desc LIMIT 1,8
+    </select>
+    <select id="getSwarmUserTotal" resultType="com.nixer.nprox.entity.swarm.SwarmUserTotal">
+        select *
+        from swarm_user_total
+        where userid = #{id}
+    </select>
+    <select id="getSwarmUserDay" resultType="com.nixer.nprox.entity.swarm.SwarmUserDayExt">
+        select *
+        from swarm_user_day
+        where userid = '${userid}' and date = '${date}'
+    </select>
+    <select id="getUserNodesState" resultType="com.nixer.nprox.entity.swarm.PoolNodes">
+        SELECT COUNT(*) as num, SN.state
+        FROM swarm_nodes SN
+                 LEFT JOIN swarm_user_nodes SUN ON SN.address = SUN.node_address
+        WHERE SUN.userid = 2
+        GROUP BY SN.state
+    </select>
+    <select id="getSwarmDay" resultType="com.nixer.nprox.entity.swarm.SwarmDay">
+        SELECT *
+        from swarm_day
+        where update_date = #{date}
+    </select>
+    <select id="userPoolStateLine" resultType="com.nixer.nprox.entity.swarm.UserSwarmLine">
+
+        SELECT SUD.date as date,
+	SUD.bzz as user_bzz,
+	SUD.cash_out as user_cash_out,
+	SUD.node_num as user_nodes_num,
+	SD.cashout as pool_cashout,
+	SD.bzzout as pool_bzz,
+	SD.nodes_num as pool_nodes_num
+        FROM
+            swarm_user_day SUD
+            LEFT JOIN swarm_day SD
+        ON SUD.date = SD.update_date
+        WHERE
+            SUD.userid = #{userid}
+        ORDER BY
+            SUD.utime DESC
+            LIMIT 1, 8
+    </select>
+    <select id="useNodesList" resultType="com.nixer.nprox.entity.swarm.SwarmNodes">
+        SELECT
+            SN.*,
+            SUN.id
+        FROM
+            swarm_nodes SN
+                LEFT JOIN swarm_user_nodes SUN ON SN.address = SUN.node_address
+        WHERE
+            SUN.userid = '${userid}'
+        <if test="state != -1">
+            AND SN.`state` = '${state}'
+        </if>
+    </select>
+    <select id="findNodeByAddress" resultType="java.lang.Integer">
+        select count(*) from  swarm_nodes where  address = #{address}
+    </select>
+    <select id="findNodeByAddressCanUse" resultType="com.nixer.nprox.entity.swarm.SwarmUserNode">
+        select * from  swarm_user_nodes WHERE node_address = #{address}
+    </select>
+
+
+</mapper>
