@@ -19,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -52,8 +53,12 @@ public class SwarmServiceImpl implements SwarmService {
 
             SwarmDayDto swarmDayDto =new SwarmDayDto();
             swarmDayDto.setBzz(poolConfig.getBzz());
+
+
             int nodenum = Integer.valueOf(poolConfig.getNode_num());
             swarmDayDto.setNode_num(poolConfig.getNode_num());
+
+
             swarmDayDto.setBzz_day(String.valueOf(totalbzz.divide(new BigDecimal(daysize),16, BigDecimal.ROUND_HALF_UP)));
             swarmDayDto.setCashout_day(String.valueOf((int)Math.ceil(totalcash_out/daysize)));
             swarmDayDto.setSingle_node_cashout(String.valueOf(new BigDecimal(totalcash_out/nodenum).divide(new BigDecimal(1),8, BigDecimal.ROUND_HALF_UP)));
@@ -67,16 +72,39 @@ public class SwarmServiceImpl implements SwarmService {
     public UserPoolUnit userPoolState(long userid) {
         UserPoolUnit userPoolUnit = new UserPoolUnit();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.DATE, -1);
+        Date start = c.getTime();
+        String beforday= sdf.format(start);//前一天
+
         //用户总计
         SwarmUserTotalExt swarmUserTotal = swarmDao.getSwarmUserTotal(userid);
         userPoolUnit.setSwarmUserTotal(swarmUserTotal);
 
+        String nodesnum = redisUtil.get("POOL:NODES");
+
         //用户当日 TODO 如果用户当日没有数据那么新建用户并计算当日数据 数据按道理应该交给其他计算线程而非此处手动建立 可以在前一天预置后一天
         SwarmUserDayExt  swarmUserDay = swarmDao.getSwarmUserDay(userid,sdf.format(new Date()));
+        if(swarmUserDay==null){
+            SwarmUserDayExt  oldswarmUserDay = swarmDao.getSwarmUserDay(userid,beforday);
+            swarmUserDay = new SwarmUserDayExt();
+            swarmUserDay.setBzz(new BigDecimal(0));
+            swarmUserDay.setNode_num(oldswarmUserDay.getNode_num());
+            swarmUserDay.setCash_out(0);
+        }
         userPoolUnit.setSwarmUserDay(swarmUserDay);
 
         //TODO 计算总体日数据
         SwarmDay swarmDay = swarmDao.getSwarmDay(sdf.format(new Date()));
+        if(swarmDay==null){
+            swarmDay = new SwarmDay();
+            swarmDay.setBzzout(new BigDecimal(0));
+            swarmDay.setCashout(0);
+            swarmDay.setNodes_num(Integer.valueOf(nodesnum));
+            swarmDay.setUpdate_date(sdf.format(new Date()));
+        }
 
         UserNodesStateDto userNodesStateDto = this.userNodesState(userid);
         userPoolUnit.setUserNodesStateDto(userNodesStateDto);
@@ -171,10 +199,27 @@ public class SwarmServiceImpl implements SwarmService {
         return ResultJson.ok();
     }
 
+    @Override
+    public int getNodesNum() {
+        return this.swarmDao.getNodesNum();
+    }
 
+
+    public static void main(String[] args) {
+        SimpleDateFormat sdf =new SimpleDateFormat("yyyy-MM-dd");
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.DATE, -1);
+        Date start = c.getTime();
+        String beforday= sdf.format(start);//前一天
+        System.out.println(beforday);
+    }
 //      mongoTemplate.save(info);
 //      return mongoTemplate.findOne(query, UserLoginInfo.class);
 //      mongoTemplate.updateMulti(query, update, UserLoginInfo.class);
 //      return mongoTemplate.findAndRemove(query, UserLoginInfo.class);
+
+
+
 
 }

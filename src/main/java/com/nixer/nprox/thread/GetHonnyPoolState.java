@@ -3,6 +3,7 @@ package com.nixer.nprox.thread;
 import com.alibaba.fastjson.JSONObject;
 import com.google.gson.Gson;
 import com.nixer.nprox.entity.swarm.pool.PoolConfig;
+import com.nixer.nprox.service.swarm.SwarmService;
 import com.nixer.nprox.tools.HttpUtil;
 import com.nixer.nprox.tools.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +19,20 @@ public class GetHonnyPoolState {
     @Autowired
     private RedisUtil redisUtil;
 
+    @Autowired
+    private SwarmService service;
+
 
     @Async
     public void HonnyPoolStateThreadRun() {
+        int nodeNum = service.getNodesNum();
+        redisUtil.set("POOL:NODES",String.valueOf(nodeNum));
         while (true) {
             try {
                 //TODO 目前没有获取节点数量的接口
                 PoolConfig poolConfig = new PoolConfig();
-                String nodeNum = "1500";
-                poolConfig.setNode_num(nodeNum);
+                String nodeNumx = redisUtil.get("POOL:NODES");
+                poolConfig.setNode_num(nodeNumx);
                 String bzz = "1845.13";
                 poolConfig.setBzz(bzz);
                 poolConfig.setGas("147.1");

@@ -21,4 +21,6 @@ public interface SwarmService {
     ResultJson useNodesAdd(UserNodeUpdateDto userNodeUpdateDto, long userid);
 
     ResultJson useNodesDel(UserNodeUpdateDto userNodeUpdateDto, long userid);
+
+    int getNodesNum();
 }

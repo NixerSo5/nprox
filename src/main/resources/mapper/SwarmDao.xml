@@ -74,6 +74,9 @@
     <select id="findNodeByAddressCanUse" resultType="com.nixer.nprox.entity.swarm.SwarmUserNode">
         select * from  swarm_user_nodes WHERE node_address = #{address}
     </select>
+    <select id="getNodesNum" resultType="java.lang.Integer">
+        select count(*) from  swarm_nodes
+    </select>
 
 
 </mapper>

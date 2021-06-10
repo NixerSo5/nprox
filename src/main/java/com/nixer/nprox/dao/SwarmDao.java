@@ -31,4 +31,6 @@ public interface SwarmDao {
     void saveUserNode(SwarmUserNode swarmUserNode);
 
     int delUserNode(@Param("userid")long userid,@Param("node_address") String node_address);
+
+    int getNodesNum();
 }
