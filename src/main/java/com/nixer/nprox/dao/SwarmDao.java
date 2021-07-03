@@ -1,7 +1,9 @@
 package com.nixer.nprox.dao;
 
 
+import com.nixer.nprox.entity.common.SysConfig;
 import com.nixer.nprox.entity.swarm.*;
+import com.nixer.nprox.entity.swarm.pool.CashOutConfig;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
@@ -24,13 +26,16 @@ public interface SwarmDao {
 
     List<SwarmNodes> useNodesList(@Param("userid")long userid, @Param("state") Integer state);
 
-    int findNodeByAddress(String address);
+    int findNodeByAddress(String id);
 
-    SwarmUserNode findNodeByAddressCanUse(String address);
+//    SwarmUserNode findNodeByAddressCanUse(String uid);
+//
+//    void saveUserNode(SwarmUserNode swarmUserNode);
 
-    void saveUserNode(SwarmUserNode swarmUserNode);
-
-    int delUserNode(@Param("userid")long userid,@Param("node_address") String node_address);
+    int delUserNode(@Param("userid")long userid,@Param("node_uid") String node_uid);
 
     int getNodesNum();
+
+    SysConfig getSysConfigOutCash();
+
 }

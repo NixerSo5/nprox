@@ -13,7 +13,7 @@ public class SwarmUserDayExt {
     private Integer cash_out;
 
     @ApiModelProperty(value="bzz数")
-    private BigDecimal bzz;
+    private Long bzz;
 
     @ApiModelProperty(value="结算日期")
     private String date;
@@ -32,11 +32,11 @@ public class SwarmUserDayExt {
         this.cash_out = cash_out;
     }
 
-    public BigDecimal getBzz() {
+    public Long getBzz() {
         return bzz;
     }
 
-    public void setBzz(BigDecimal bzz) {
+    public void setBzz(Long bzz) {
         this.bzz = bzz;
     }
 

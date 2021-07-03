@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.SwarmUserNodesNumDao">
+
+    <resultMap type="com.nixer.nprox.entity.SwarmUserNodesNum" id="SwarmUserNodesNumMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="nodesNum" column="nodes_num" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="SwarmUserNodesNumMap">
+        select id,
+               userid,
+               nodes_num
+        from nprox.swarm_user_nodes_num
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="SwarmUserNodesNumMap">
+        select id,
+               userid,
+               nodes_num
+        from nprox.swarm_user_nodes_num limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="SwarmUserNodesNumMap">
+        select
+        id, userid, nodes_num
+        from nprox.swarm_user_nodes_num
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="userid != null">
+                and userid = #{userid}
+            </if>
+            <if test="nodesNum != null">
+                and nodes_num = #{nodesNum}
+            </if>
+        </where>
+    </select>
+    <select id="findByUserId" resultType="com.nixer.nprox.entity.SwarmUserNodesNum">
+        select * from swarm_user_nodes_num where  userid = #{userid}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_nodes_num(userid, nodes_num)
+        values (#{userid}, #{nodesNum})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_nodes_num(userid, nodes_num)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.nodesNum})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_nodes_num(userid, nodes_num)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.nodesNum})
+        </foreach>
+        on duplicate key update
+        userid = values(userid) , nodes_num = values(nodes_num)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.swarm_user_nodes_num
+        <set>
+            <if test="userid != null">
+                userid = #{userid},
+            </if>
+            <if test="nodesNum != null">
+                nodes_num = #{nodesNum},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateNodeNumByUserid">
+        update swarm_user_nodes_num  set  nodes_num =nodes_num+#{updatenodes}
+        where userid=#{userid}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.swarm_user_nodes_num
+        where id = #{id}
+    </delete>
+
+</mapper>
+

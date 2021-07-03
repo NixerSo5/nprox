@@ -7,11 +7,11 @@ import java.math.BigDecimal;
 public class UserSwarmLine {
 
     private String date;
-    private BigDecimal user_bzz;
+    private Long user_bzz;
     private Integer  user_cash_out;
     private Integer user_nodes_num;
     private Integer pool_cashout;
-    private BigDecimal pool_bzz;
+    private Long pool_bzz;
     private Integer pool_nodes_num;
 
  public String getDate() {
@@ -22,13 +22,7 @@ public class UserSwarmLine {
   this.date = date;
  }
 
- public BigDecimal getUser_bzz() {
-  return user_bzz;
- }
 
- public void setUser_bzz(BigDecimal user_bzz) {
-  this.user_bzz = user_bzz;
- }
 
  public Integer getUser_cash_out() {
   return user_cash_out;
@@ -54,11 +48,19 @@ public class UserSwarmLine {
   this.pool_cashout = pool_cashout;
  }
 
- public BigDecimal getPool_bzz() {
+ public Long getUser_bzz() {
+  return user_bzz;
+ }
+
+ public void setUser_bzz(Long user_bzz) {
+  this.user_bzz = user_bzz;
+ }
+
+ public Long getPool_bzz() {
   return pool_bzz;
  }
 
- public void setPool_bzz(BigDecimal pool_bzz) {
+ public void setPool_bzz(Long pool_bzz) {
   this.pool_bzz = pool_bzz;
  }
 

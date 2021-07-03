@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.SwarmUserDayDao">
+
+    <resultMap type="com.nixer.nprox.entity.SwarmUserDay" id="SwarmUserDayMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="cashOut" column="cash_out" jdbcType="INTEGER"/>
+        <result property="bzz" column="bzz" jdbcType="INTEGER"/>
+        <result property="date" column="date" jdbcType="VARCHAR"/>
+        <result property="utime" column="utime" jdbcType="TIMESTAMP"/>
+        <result property="nodeNum" column="node_num" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="SwarmUserDayMap">
+        select id,
+               userid,
+               cash_out,
+               bzz, date, utime, node_num
+        from nprox.swarm_user_day
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="SwarmUserDayMap">
+        select id,
+               userid,
+               cash_out,
+               bzz, date, utime, node_num
+        from nprox.swarm_user_day
+            limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="SwarmUserDayMap">
+        select
+        id, userid, cash_out, bzz, date, utime, node_num
+        from nprox.swarm_user_day
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="userid != null">
+                and userid = #{userid}
+            </if>
+            <if test="cashOut != null">
+                and cash_out = #{cashOut}
+            </if>
+            <if test="bzz != null">
+                and bzz = #{bzz}
+            </if>
+            <if test="date != null and date != ''">
+                and date = #{date}
+            </if>
+            <if test="utime != null">
+                and utime = #{utime}
+            </if>
+            <if test="nodeNum != null">
+                and node_num = #{nodeNum}
+            </if>
+        </where>
+    </select>
+    <select id="findByUserid" resultType="com.nixer.nprox.entity.SwarmUserDay">
+        select * from swarm_user_day where userid = #{userid}  and `date` = #{date}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_day(userid, cash_out, bzz, date, utime, node_num)
+        values (#{userid}, #{cashOut}, #{bzz}, #{date}, #{utime}, #{nodeNum})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_day(userid, cash_out, bzz, date, utime, node_num)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.cashOut}, #{entity.bzz}, #{entity.date}, #{entity.utime}, #{entity.nodeNum})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_day(userid, cash_out, bzz, date, utime, node_num)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.cashOut}, #{entity.bzz}, #{entity.date}, #{entity.utime}, #{entity.nodeNum})
+        </foreach>
+        on duplicate key update
+        userid = values(userid) , cash_out = values(cash_out) , bzz = values(bzz) , date = values(date) , utime =
+        values(utime) , node_num = values(node_num)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.swarm_user_day
+        <set>
+            <if test="userid != null">
+                userid = #{userid},
+            </if>
+            <if test="cashOut != null">
+                cash_out = #{cashOut},
+            </if>
+            <if test="bzz != null">
+                bzz = #{bzz},
+            </if>
+            <if test="date != null and date != ''">
+                date = #{date},
+            </if>
+            <if test="utime != null">
+                utime = #{utime},
+            </if>
+            <if test="nodeNum != null">
+                node_num = #{nodeNum},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateNodeNumByUserid">
+        UPDATE swarm_user_day set  node_num =node_num+#{updatenodes}
+        where userid = #{userid} and `date` = #{date}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.swarm_user_day
+        where id = #{id}
+    </delete>
+
+</mapper>
+

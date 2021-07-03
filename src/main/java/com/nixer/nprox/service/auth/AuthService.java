@@ -3,6 +3,14 @@ package com.nixer.nprox.service.auth;
 
 import com.nixer.nprox.entity.common.ResponseUserToken;
 import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.entity.common.dto.ChangeBindDto;
+import com.nixer.nprox.entity.common.dto.SendVerificationCodeDto;
+import com.nixer.nprox.entity.common.dto.SinglePramDto;
+import com.nixer.nprox.entity.common.dto.UserVerifyDto;
+import com.nixer.nprox.entity.swarm.dto.*;
+import com.nixer.nprox.tools.ResultJson;
+
+import java.io.IOException;
 
 /**
  * @author: JoeTao
@@ -12,9 +20,10 @@ public interface AuthService {
     /**
      * 注册用户
      * @param userDetail
+     * @param i
      * @return
      */
-    UserDetail register(UserDetail userDetail);
+    UserDetail register(UserDetail userDetail, int i);
 
     /**
      * 登陆
@@ -43,4 +52,20 @@ public interface AuthService {
      * @return
      */
     UserDetail getUserByToken(String token);
+
+    ResultJson sendVerificationCode(SendVerificationCodeDto codeDto) throws IOException;
+
+    ResultJson sendEmailVerificationCode(SendVerificationCodeDto codeDto);
+
+    ResponseUserToken login(SuperLoginDto superLoginDto);
+
+    ResultJson modifyPassword(ModifyPasswordDto modifyPasswordDto);
+
+    ResultJson findPassword(ModifyPasswordDtoExt modifyPasswordDto);
+
+    ResultJson userVerify(UserDetail userid, UserVerifyDto userVerifyDto, String ipaddress) throws IOException;
+
+    ResultJson userChangeBind(UserDetail userDetail, ChangeBindDto changeBindDto, String ipaddress);
+
+    ResultJson beforeUserVerify(UserDetail userDetail, SinglePramDto singlePramDto) throws IOException;
 }

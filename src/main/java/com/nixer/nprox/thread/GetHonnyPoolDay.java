@@ -5,7 +5,6 @@ import com.google.gson.Gson;
 import com.nixer.nprox.entity.swarm.dto.SwarmDayDto;
 import com.nixer.nprox.entity.swarm.pool.PoolConfig;
 import com.nixer.nprox.service.swarm.SwarmService;
-import com.nixer.nprox.tools.HttpUtil;
 import com.nixer.nprox.tools.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -27,7 +26,6 @@ public class GetHonnyPoolDay {
         while (true) {
             try {
                 //查询出日结果然后对日结果进行计算
-                //TODO 目前没有获取节点数量的接口
                 SwarmDayDto swarmDayDto = service.getSwarmDay();
                 if(swarmDayDto!=null){
                     Gson gson = new Gson();

@@ -8,10 +8,10 @@ import io.swagger.annotations.ApiModelProperty;
 public class UserPoolUnit {
 
     @ApiModelProperty(value="用户总计")
-    private SwarmUserTotalExt swarmUserTotal;
+    private SwarmUserTotalDto swarmUserTotal;
 
     @ApiModelProperty(value="用户今日")
-    private SwarmUserDayExt swarmUserDay;
+    private SwarmUserDayDto swarmUserDay;
 
     @ApiModelProperty(value="计算结果集")
     private SwarmUserExp swarmUserExp;
@@ -19,19 +19,19 @@ public class UserPoolUnit {
     @ApiModelProperty(value="节点状态")
     private UserNodesStateDto userNodesStateDto;
 
-    public SwarmUserTotalExt getSwarmUserTotal() {
+    public SwarmUserTotalDto getSwarmUserTotal() {
         return swarmUserTotal;
     }
 
-    public void setSwarmUserTotal(SwarmUserTotalExt swarmUserTotal) {
+    public void setSwarmUserTotal(SwarmUserTotalDto swarmUserTotal) {
         this.swarmUserTotal = swarmUserTotal;
     }
 
-    public SwarmUserDayExt getSwarmUserDay() {
+    public SwarmUserDayDto getSwarmUserDay() {
         return swarmUserDay;
     }
 
-    public void setSwarmUserDay(SwarmUserDayExt swarmUserDay) {
+    public void setSwarmUserDay(SwarmUserDayDto swarmUserDay) {
         this.swarmUserDay = swarmUserDay;
     }
 

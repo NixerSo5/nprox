@@ -25,23 +25,27 @@ public class GetHonnyPoolState {
 
     @Async
     public void HonnyPoolStateThreadRun() {
+        //TODO 这个应该放入循环中
         int nodeNum = service.getNodesNum();
+        nodeNum = 3607;
         redisUtil.set("POOL:NODES",String.valueOf(nodeNum));
         while (true) {
             try {
-                //TODO 目前没有获取节点数量的接口
                 PoolConfig poolConfig = new PoolConfig();
                 String nodeNumx = redisUtil.get("POOL:NODES");
                 poolConfig.setNode_num(nodeNumx);
-                String bzz = "1845.13";
+                String bzz = "--";
                 poolConfig.setBzz(bzz);
-                poolConfig.setGas("147.1");
+                poolConfig.setGas("--");
+                poolConfig.setGasmin("--");
                 //{"status":"1","message":"OK","result":{"LastBlock":"12593044","SafeGasPrice":"11","ProposeGasPrice":"15","FastGasPrice":"16"}}
-                String res = HttpUtil.doGetProxyOne(ETHURL);
+               // String res = HttpUtil.doGet(ETHURL);
+                String res =null;
                 if(res!=null&&!res.equals("")){
                     JSONObject jso = JSONObject.parseObject(res);
                     if(jso.getString("status").equals("1")){
                         poolConfig.setGas(jso.getJSONObject("result").getString("ProposeGasPrice"));
+                        poolConfig.setGasmin(jso.getJSONObject("result").getString("SafeGasPrice"));
                     }
                 }
                 Gson gson = new Gson();

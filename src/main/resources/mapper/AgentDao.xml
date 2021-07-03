@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.AgentDao">
+
+    <resultMap type="com.nixer.nprox.entity.swarm.Agent" id="AgentMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="name" column="name" jdbcType="VARCHAR"/>
+        <result property="owneruserid" column="owneruserid" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="AgentMap">
+        select id,
+               name,
+               owneruserid
+        from nprox.agent
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="AgentMap">
+        select id,
+               name,
+               owneruserid
+        from nprox.agent limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="AgentMap">
+        select
+        id, name, owneruserid
+        from nprox.agent
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="name != null and name != ''">
+                and name = #{name}
+            </if>
+            <if test="owneruserid != null">
+                and owneruserid = #{owneruserid}
+            </if>
+        </where>
+    </select>
+    <select id="findByOwnerUid" resultType="com.nixer.nprox.entity.swarm.Agent">
+         select  *  from  agent where owneruserid = #{userid}
+
+    </select>
+    <select id="agentList" resultType="com.nixer.nprox.entity.swarm.Agent">
+        select  *  from  agent
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent(name, owneruserid)
+        values (#{name}, #{owneruserid})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent(name, owneruserid)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.name}, #{entity.owneruserid})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent(name, owneruserid)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.name}, #{entity.owneruserid})
+        </foreach>
+        on duplicate key update
+        name = values(name) , owneruserid = values(owneruserid)
+    </insert>
+    <insert id="insertAgentOrder">
+        INSERT INTO agent_order
+        (`orderid`, `userid`, `charges`, `orderbzz`, `getbzz`, `ctime`, `issend`)
+        VALUES
+        (#{orderid}, #{userid}, #{charges}, #{orderbzz}, #{getbzz}, now(), #{issend});
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.agent
+        <set>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="owneruserid != null">
+                owneruserid = #{owneruserid},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.agent
+        where id = #{id}
+    </delete>
+
+</mapper>
+

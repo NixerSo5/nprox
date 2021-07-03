@@ -18,9 +18,9 @@ public interface SwarmService {
 
     PageInfo<SwarmNodes> useNodesList(NodesFindDto nodesFindDto, long userid);
 
-    ResultJson useNodesAdd(UserNodeUpdateDto userNodeUpdateDto, long userid);
-
-    ResultJson useNodesDel(UserNodeUpdateDto userNodeUpdateDto, long userid);
+//    ResultJson useNodesAdd(UserNodeUpdateDto userNodeUpdateDto, long userid);
+//
+//    ResultJson useNodesDel(UserNodeUpdateDto userNodeUpdateDto, long userid);
 
     int getNodesNum();
 }

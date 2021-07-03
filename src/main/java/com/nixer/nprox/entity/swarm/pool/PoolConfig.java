@@ -14,6 +14,9 @@ public class PoolConfig {
     @ApiModelProperty(value="gas费用")
     private String gas;
 
+    @ApiModelProperty(value="gas最小费用")
+    private String gasmin;
+
     @ApiModelProperty(value="bzz价格")
     private String bzz;
 
@@ -39,5 +42,13 @@ public class PoolConfig {
 
     public void setBzz(String bzz) {
         this.bzz = bzz;
+    }
+
+    public String getGasmin() {
+        return gasmin;
+    }
+
+    public void setGasmin(String gasmin) {
+        this.gasmin = gasmin;
     }
 }

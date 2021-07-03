@@ -1,5 +1,6 @@
 package com.nixer.nprox.tools;
 
+import com.alibaba.fastjson.JSONObject;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
 import org.apache.http.HttpEntity;
@@ -9,6 +10,9 @@ import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
@@ -38,24 +42,49 @@ public class HttpUtil {
     public static String sendPostHander(String url, String Params, Map<String, Object> header) throws IOException {
         return qudoJsonPost(url, Params, header);
     }
-    public static String doGetProxyOne(String url) {
+
+    public static String doGet(String url,Boolean proxy){
+       return doOne(url,"GET",null,proxy);
+    }
+    public static String doGet(String url){
+        return doOne(url,"GET",null,false);
+    }
+    public static String doPost(String url,Boolean proxy){
+        return doOne(url,"POST",null,proxy);
+    }
+    public static String doPost(String url){
+        return doOne(url,"POST",null,false);
+    }
+    public static String doOne(String url,String methed,Object data,Boolean isproxy) {
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         HttpHost proxy = new HttpHost("127.0.0.1", 7890);
         //把代理设置到请求配置
-        //RequestConfig defaultRequestConfig = RequestConfig.custom().setProxy(proxy).build();
-        RequestConfig defaultRequestConfig = RequestConfig.custom().build();
+        RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(5000).setConnectionRequestTimeout(2000).build();
+        if(isproxy){
+            defaultRequestConfig = RequestConfig.custom().setProxy(proxy).build();
+        }
         CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
         // 创建Get请求
-
         HttpGet httpGet = new HttpGet(url);
-
         // 响应模型
         CloseableHttpResponse response = null;
         try {
             // 由客户端执行(发送)Get请求
 //            System.setProperty("proxyHost", "127.0.0.1"); // PROXY_HOST：代理的IP地址
 //            System.setProperty("proxyPort",  "7890"); // PROXY_PORT：代理的端口号
-            response = httpclient.execute(httpGet);
+            if(methed.equals("POST")){
+                HttpPost httpPost = new HttpPost(url);
+                if(data!=null){
+                    httpPost.setHeader("Content-Type", "application/json");
+                    httpPost.setEntity(new StringEntity(JSONObject.toJSONString(data), ContentType.create("application/json", "utf-8")));
+                }
+                response = httpclient.execute(httpPost);
+                System.out.println("==========================httpGetsend=================="+url+methed+data+isproxy);
+            }else{
+                System.out.println("==========================httpGetsend=================="+url+methed+data+isproxy);
+                response = httpclient.execute(httpGet);
+            }
+
             // 从响应模型中获取响应实体
             HttpEntity responseEntity = response.getEntity();
             System.out.println("响应状态为:" + response.getStatusLine());

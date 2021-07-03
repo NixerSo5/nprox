@@ -1,47 +1,73 @@
 package com.nixer.nprox.entity.swarm;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import java.io.Serializable;
 
-@ApiModel
-public class SwarmNodes {
+/**
+ * (SwarmNodes)实体类
+ *
+ * @author makejava
+ * @since 2021-06-10 23:52:44
+ */
+public class SwarmNodes implements Serializable {
+    private static final long serialVersionUID = -10253492225752328L;
+    /**
+     * 节点编号
+     */
+    private String id;
 
-    @ApiModelProperty(value="标识")
-    private Integer id;
-
-    @ApiModelProperty(value="code")
     private String code;
-
-    @ApiModelProperty(value="服务器code")
+    /**
+     * 矿机标识
+     */
     private String server_code;
-
-    @ApiModelProperty(value="peer_id")
+    /**
+     * peerid
+     */
     private String peer_id;
-
-    @ApiModelProperty(value="类别")
+    /**
+     * 类型
+     */
     private String type;
-
-    @ApiModelProperty(value="以太坊地址")
-    private String address;
-
-    @ApiModelProperty(value="ip")
+    /**
+     * 以太地址
+     */
+     private String address;
+    /**
+     * 节点ip
+     */
     private String ip;
-
-    @ApiModelProperty(value="地区")
+    /**
+     * 区域
+     */
     private String area;
-
-    @ApiModelProperty(value="链接节点数")
+    /**
+     * 链接节点数
+     */
     private Integer link_nodes;
-
-    @ApiModelProperty(value="状态 0离线 1在线")
+    /**
+     * 状态0离线  1在线
+     */
     private Integer state;
+    /**
+     * 出票数
+     */
+    private Integer cheques;
 
+    private Long bzz_get;
 
-    public Integer getId() {
+    private Long bzz_send;
+
+    private Long bzz;
+
+    private Integer loopnum;
+
+    private Integer linkid;
+
+    public String getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(String id) {
         this.id = id;
     }
 
@@ -51,6 +77,57 @@ public class SwarmNodes {
 
     public void setCode(String code) {
         this.code = code;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+
+    public Integer getState() {
+        return state;
+    }
+
+    public void setState(Integer state) {
+        this.state = state;
+    }
+
+    public Integer getCheques() {
+        return cheques;
+    }
+
+    public void setCheques(Integer cheques) {
+        this.cheques = cheques;
+    }
+
+
+
+    public Integer getLoopnum() {
+        return loopnum;
+    }
+
+    public void setLoopnum(Integer loopnum) {
+        this.loopnum = loopnum;
     }
 
     public String getServer_code() {
@@ -69,12 +146,36 @@ public class SwarmNodes {
         this.peer_id = peer_id;
     }
 
-    public String getType() {
-        return type;
+    public Integer getLink_nodes() {
+        return link_nodes;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setLink_nodes(Integer link_nodes) {
+        this.link_nodes = link_nodes;
+    }
+
+    public Long getBzz_get() {
+        return bzz_get;
+    }
+
+    public void setBzz_get(Long bzz_get) {
+        this.bzz_get = bzz_get;
+    }
+
+    public Long getBzz_send() {
+        return bzz_send;
+    }
+
+    public void setBzz_send(Long bzz_send) {
+        this.bzz_send = bzz_send;
+    }
+
+    public Long getBzz() {
+        return bzz;
+    }
+
+    public void setBzz(Long bzz) {
+        this.bzz = bzz;
     }
 
     public String getAddress() {
@@ -85,35 +186,11 @@ public class SwarmNodes {
         this.address = address;
     }
 
-    public String getIp() {
-        return ip;
+    public Integer getLinkid() {
+        return linkid;
     }
 
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public String getArea() {
-        return area;
-    }
-
-    public void setArea(String area) {
-        this.area = area;
-    }
-
-    public Integer getLink_nodes() {
-        return link_nodes;
-    }
-
-    public void setLink_nodes(Integer link_nodes) {
-        this.link_nodes = link_nodes;
-    }
-
-    public Integer getState() {
-        return state;
-    }
-
-    public void setState(Integer state) {
-        this.state = state;
+    public void setLinkid(Integer linkid) {
+        this.linkid = linkid;
     }
 }

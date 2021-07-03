@@ -1,5 +1,6 @@
 package com.nixer.nprox.config;
 
+import com.nixer.nprox.filter.KaptchaFilter;
 import com.nixer.nprox.jwt.JwtAccessDeniedHandler;
 import com.nixer.nprox.jwt.JwtAuthenticationEntryPoint;
 import com.nixer.nprox.jwt.JwtAuthenticationTokenFilter;
@@ -98,7 +99,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
                 // 放行OPTIONS请求
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
+                // 图像验证码不需要权限
+                .antMatchers("/defaultKaptcha").permitAll()
                 //允许匿名及登录用户访问
                 .antMatchers("/auth/**", "/api/**","/error/**").permitAll()
                 // 所有请求都需要认证

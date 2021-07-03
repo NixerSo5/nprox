@@ -7,7 +7,7 @@ public class SwarmDay {
     private Integer id;
     private String update_date;
     private Integer cashout;
-    private BigDecimal bzzout;
+    private Long bzzout;
     private Integer nodes_num;
 
 
@@ -35,11 +35,11 @@ public class SwarmDay {
         this.cashout = cashout;
     }
 
-    public BigDecimal getBzzout() {
+    public Long getBzzout() {
         return bzzout;
     }
 
-    public void setBzzout(BigDecimal bzzout) {
+    public void setBzzout(Long bzzout) {
         this.bzzout = bzzout;
     }
 

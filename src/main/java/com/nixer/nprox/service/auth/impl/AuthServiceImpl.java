@@ -1,14 +1,26 @@
 package com.nixer.nprox.service.auth.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import com.ning.http.util.UTF8UrlEncoder;
+import com.nixer.nprox.dao.AgentUserDao;
 import com.nixer.nprox.dao.AuthDao;
+import com.nixer.nprox.dao.SysLoginTypeDao;
+import com.nixer.nprox.dao.UserInfoDao;
+import com.nixer.nprox.entity.AgentUser;
+import com.nixer.nprox.entity.SysLoginType;
+import com.nixer.nprox.entity.common.Buser;
 import com.nixer.nprox.entity.common.ResponseUserToken;
 import com.nixer.nprox.entity.common.Role;
 import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.entity.common.dto.ChangeBindDto;
+import com.nixer.nprox.entity.common.dto.SendVerificationCodeDto;
+import com.nixer.nprox.entity.common.dto.SinglePramDto;
+import com.nixer.nprox.entity.common.dto.UserVerifyDto;
+import com.nixer.nprox.entity.swarm.*;
+import com.nixer.nprox.entity.swarm.dto.*;
 import com.nixer.nprox.exception.CustomException;
 import com.nixer.nprox.service.auth.AuthService;
-import com.nixer.nprox.tools.JwtUtils;
-import com.nixer.nprox.tools.ResultCode;
-import com.nixer.nprox.tools.ResultJson;
+import com.nixer.nprox.tools.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,8 +33,11 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * @author: JoeTao
@@ -34,6 +49,21 @@ public class AuthServiceImpl implements AuthService {
     private final UserDetailsService userDetailsService;
     private final JwtUtils jwtTokenUtil;
     private final AuthDao authMapper;
+
+
+    @Autowired
+    private  RedisUtil redisUtil;
+
+    @Autowired
+    private UserInfoDao userInfoDao;
+
+    @Autowired
+    private AgentUserDao agentUserDao;
+
+    @Autowired
+    private SysLoginTypeDao sysLoginTypeDao;
+
+
 
     @Value("${jwt.tokenHead}")
     private String tokenHead;
@@ -47,20 +77,101 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserDetail register(UserDetail userDetail) {
+    @Transactional(rollbackFor = Exception.class)
+    public UserDetail register(UserDetail userDetail, int type) {//1是手机注册  2邮箱注册
         final String username = userDetail.getUsername();
-        if(authMapper.findByUsername(username)!=null) {
+        SysLoginType findSysLoginType = sysLoginTypeDao.findByLoginName(username);
+        if(findSysLoginType!=null) {
             throw new CustomException(ResultJson.failure(ResultCode.BAD_REQUEST, "用户已存在"));
         }
+        //生成usertotal
+        SwarmUserTotal swarmUserTotal =new SwarmUserTotal();
+
+        //userday 30tian
+        //swarm_user_nodes_num 0
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
         final String rawPassword = userDetail.getPassword();
         userDetail.setPassword(encoder.encode(rawPassword));
         userDetail.setLastPasswordResetDate(new Date());
+
+        //生成随机用户登陆相关
+        String useruid = UUID.randomUUID().toString();
+        userDetail.setUsername(useruid);
         authMapper.insert(userDetail);
+        if(userDetail.getId()<=0){
+            throw new CustomException(ResultJson.failure(ResultCode.SERVER_ERROR, "保存用户错误"));
+        }
+
+        SysLoginType sysLoginType = new SysLoginType();
+        sysLoginType.setLogin_type(type);
+        sysLoginType.setLogin_name(username);
+        sysLoginType.setUserid((int) userDetail.getId());
+        sysLoginType.setSys_username(useruid);
+        sysLoginTypeDao.insert(sysLoginType);
+        if(sysLoginType.getId()<=0){
+            throw new CustomException(ResultJson.failure(ResultCode.SERVER_ERROR, "保存用户错误"));
+        }
+
+        swarmUserTotal.setUserid((int) userDetail.getId());
+        swarmUserTotal.setTotal_cashout(0);
+        swarmUserTotal.setTotal_send_bzz(0L);
+        swarmUserTotal.setTotal_get_bzz(0L);
+        swarmUserTotal.setTotal_node_num(0);
+        swarmUserTotal.setBzz(0L);
+
+        authMapper.saveUserTotal(swarmUserTotal);
+
+        SwarmUserNodesNum swarmUserNodesNum = new SwarmUserNodesNum();
+        swarmUserNodesNum.setNodes_num(0);
+        swarmUserNodesNum.setUserid((int) userDetail.getId());
+        authMapper.saveUserNodesNum(swarmUserNodesNum);
+
+        UserInfo userInfo = new UserInfo();
+        userInfo.setUserid((int)userDetail.getId());
+        userInfo.setCashDai(0L);
+        if(type == 1 ){
+            userInfo.setPhone(userDetail.getUsername());
+        }else{
+            userInfo.setEmail(userDetail.getUsername());
+        }
+        userInfo.setCashoutBzz(0L);
+        userInfo.setLastip(userDetail.getLastip());
+        userInfo.setImgurl("https://picsum.photos/80/80");
+        userInfoDao.insert(userInfo);
+        //TODO 提现charges  Agent认为是默认20%  User100%
+
+        AgentUser agentUser = new AgentUser();
+        agentUser.setUserid((int)userDetail.getId());
+        agentUser.setCharges(100);
+        agentUser.setAgentid(-1);
+        agentUser.setLevelid(0);
+        agentUserDao.insert(agentUser);
+
+
+        SimpleDateFormat sdf =new SimpleDateFormat("yyyy-MM-dd");
+        List<SwarmUserDay> swarmUserDayList = new ArrayList<>();
+        for (int i = 30; i >= 0; i--) {
+            Calendar c = Calendar.getInstance();
+            c.setTime(new Date());
+            c.add(Calendar.DATE, -i);
+            Date start = c.getTime();
+            String beforday= sdf.format(start);//前一天
+            SwarmUserDay swarmUserDay = new SwarmUserDay();
+            swarmUserDay.setUserid((int) userDetail.getId());
+            swarmUserDay.setBzz(0L);
+            swarmUserDay.setDate(beforday);
+            swarmUserDay.setNode_num(0);
+            swarmUserDay.setCash_out(0);
+            swarmUserDayList.add(swarmUserDay);
+        }
+
+        authMapper.betchSaveUserDay(swarmUserDayList);
+
         long roleId = userDetail.getRole().getId();
         Role role = authMapper.findRoleById(roleId);
         userDetail.setRole(role);
         authMapper.insertRole(userDetail.getId(), roleId);
+
         return userDetail;
     }
 
@@ -81,9 +192,11 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(String token) {
-        token = token.substring(tokenHead.length());
-        String userName = jwtTokenUtil.getUsernameFromToken(token);
-        jwtTokenUtil.deleteToken(userName);
+        if(token!=null){
+            token = token.substring(tokenHead.length());
+            String userName = jwtTokenUtil.getUsernameFromToken(token);
+            jwtTokenUtil.deleteToken(userName);
+        }
     }
 
     @Override
@@ -93,6 +206,7 @@ public class AuthServiceImpl implements AuthService {
         UserDetail userDetail = (UserDetail) userDetailsService.loadUserByUsername(username);
         if (jwtTokenUtil.canTokenBeRefreshed(token, userDetail.getLastPasswordResetDate())){
             token =  jwtTokenUtil.refreshToken(token);
+            jwtTokenUtil.putToken(username, token);
             return new ResponseUserToken(token, userDetail);
         }
         return null;
@@ -104,6 +218,226 @@ public class AuthServiceImpl implements AuthService {
         return jwtTokenUtil.getUserFromToken(token);
     }
 
+    @Override
+    public ResultJson sendVerificationCode(SendVerificationCodeDto codeDto) throws IOException {
+        //查看是否有这个key 有就不能发送
+        String  value = redisUtil.get("SENDSMSLOCK:"+codeDto.getSend());
+        if(value==null){
+            String token =  randomCode();
+            String msgx = "【虎德】您的验证码"+token+"，该验证码5分钟内有效，请勿泄漏于他人！";
+            msgx = UTF8UrlEncoder.encodePath(msgx);
+            String xurl = "http://api.sms654.com/smsUTF8.aspx?type=send&username=Hudex&" +
+                    "password=E10ADC3949BA59ABBE56E057F20F883E&gwid=45e5195c" +
+                    "&mobile="+codeDto.getSend()+"&message="+msgx+"&rece=json";
+            String req = HttpUtil.doPost(xurl);
+            if(req!=null&&req!=""){
+                JSONObject jso = JSONObject.parseObject(req);
+                if(jso.getString("code").equals("0")){
+                    redisUtil.set("SENDSMSLOCK:"+codeDto.getSend(),"lock",60L);
+                    redisUtil.set("SENDSMS:"+codeDto.getSend(),token,5*60L);
+                    return ResultJson.ok();
+                }if(jso.getString("code").equals("-33")){
+                    return ResultJson.failure(ResultCode.BAD_REQUEST,"手机号不存在");
+                }else{
+                    return ResultJson.failure(ResultCode.SERVER_ERROR);
+                }
+            }else{
+                return ResultJson.failure(ResultCode.SERVER_ERROR);
+            }
+        }else{
+            return ResultJson.failure(ResultCode.BAD_REQUEST,"操作太快!");
+        }
+    }
+
+
+    public static void main(String[] args) {
+//        String token =  randomCode();
+//        String msgx = "【虎德】您的验证码"+token+"，该验证码5分钟内有效，请勿泄漏于他人！";
+//        msgx = UTF8UrlEncoder.encodePath(msgx);
+//        String xurl = "http://api.sms654.com/smsUTF8.aspx?type=send&username=Hudex&" +
+//                "password=E10ADC3949BA59ABBE56E057F20F883E&gwid=45e5195c" +
+//                "&mobile="+"17461905219"+"&message="+msgx+"&rece=json";
+//        String req = HttpUtil.doPost(xurl);
+//        System.out.println(req);
+
+        UserDetail userDetail = new UserDetail(1l,"1",null,"1");
+        userDetail.setUsername("sss");
+        String f = userDetail.getUsername();
+        userDetail.setUsername("sssf");
+        System.out.println(f);
+
+
+    }
+
+
+    @Override
+    public ResultJson sendEmailVerificationCode(SendVerificationCodeDto codeDto) {
+        String token =  randomCode();
+        try {
+            MailUtil.sendEmail(codeDto.getSend(),token);
+            redisUtil.set("SENDEMAIL:"+codeDto.getSend(),token,5*60L);
+            return ResultJson.ok();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResultJson.failure(ResultCode.SERVER_ERROR);
+        }
+    }
+
+    @Override
+    public ResponseUserToken login(SuperLoginDto superLoginDto) {
+        //用户验证
+        final Authentication authentication = authenticate(superLoginDto.getUsername(), superLoginDto.getPassword());
+        //存储认证信息
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        //生成token
+        final UserDetail userDetail = (UserDetail) authentication.getPrincipal();
+        final String token = jwtTokenUtil.generateAccessToken(userDetail);
+        //存储token
+        jwtTokenUtil.putToken(userDetail.getUsername(), token);
+        superLoginDto.setId((int)userDetail.getId());
+        //更新登录ip和登录时间
+        userInfoDao.updateLastIpAndTime(superLoginDto);
+        return new ResponseUserToken(token, userDetail);
+    }
+
+    @Override
+    public ResultJson modifyPassword(ModifyPasswordDto modifyPasswordDto) {
+        Buser buser = authMapper.findBuserById(modifyPasswordDto.getUserid());
+        if(buser.getPhone()==null||buser.getPassword()==""){
+            return ResultJson.failure(ResultCode.BAD_REQUEST,"该账号未绑定手机号!");
+        }
+         return  modifyPsw(buser,modifyPasswordDto,0);
+    }
+
+
+    @Transactional(rollbackFor = Exception.class)
+    public  ResultJson  modifyPsw(Buser buser, ModifyPasswordDto modifyPasswordDto, int type){
+        String vcode = redisUtil.get("SENDSMS:"+buser.getPhone());
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        if(type==0){
+            if(!encoder.matches(modifyPasswordDto.getOldPsw(),buser.getPassword())){
+                return ResultJson.failure(ResultCode.BAD_REQUEST,"密码错误!");
+            }
+        }
+        if(vcode.equals(modifyPasswordDto.getSmscode())){
+            //更新
+            modifyPasswordDto.setNewPsw(encoder.encode(modifyPasswordDto.getNewPsw()));
+            authMapper.updatePassword(modifyPasswordDto);
+            this.logout(modifyPasswordDto.getToken());
+            return ResultJson.ok();
+        }else{
+            return ResultJson.failure(ResultCode.BAD_REQUEST,"验证码错误!");
+        }
+    }
+
+    @Override
+    public ResultJson findPassword(ModifyPasswordDtoExt modifyPasswordDto) {
+        UserDetail userDetail =   authMapper.findByUsername(modifyPasswordDto.getUsername());
+        if(userDetail==null){
+            return ResultJson.failure(ResultCode.BAD_REQUEST,"用户不存在");
+        }
+        Buser buser = authMapper.findBuserById(userDetail.getId());
+        if(buser.getPhone()==null||!buser.getPhone().equals(modifyPasswordDto.getPhonenum())){
+            return ResultJson.failure(ResultCode.BAD_REQUEST,"手机号错误");
+        }
+        return  modifyPsw(buser,modifyPasswordDto, 1);
+    }
+
+    @Override
+    public ResultJson userVerify(UserDetail userDetail, UserVerifyDto singlePramDto, String ipaddress) throws IOException {
+          long userid = userDetail.getId();
+          UserInfo userInfo= userInfoDao.findByUserid(userDetail.getId());
+          if(userInfo==null){
+              return ResultJson.failure(ResultCode.BAD_REQUEST,"用户不存在!");
+          }
+          if((singlePramDto.getUnlockType().equals("0")&&StringUtils.isEmpty(userInfo.getPhone()))||(singlePramDto.getUnlockType().equals(
+                  "1")&&StringUtils.isEmpty(userInfo.getEmail()))){
+              return ResultJson.failure(ResultCode.BAD_REQUEST,"验证未绑定!");
+          }
+        String value = "";
+         if(singlePramDto.getUnlockType().equals("0")){
+            value = redisUtil.get("SENDSMS:" +userInfo.getPhone());
+           }else{
+            value = redisUtil.get("SENDEMAIL:" +userInfo.getEmail());
+          }
+          if(singlePramDto.getVrifyCode().equals(value)){
+              redisUtil.set("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress,"unlock",60L*5);
+              return ResultJson.ok();
+          }
+          return ResultJson.failure(ResultCode.BAD_REQUEST,"验证码错误无法解锁");
+    }
+
+    @Override
+    public ResultJson userChangeBind(UserDetail userDetail, ChangeBindDto changeBindDto, String ipaddress) {
+       if(UserUnlock(userDetail.getId(),ipaddress)){
+           UserInfo userInfo = userInfoDao.findByUserid(userDetail.getId());
+           SysLoginType sysLoginType = null;
+           if(userInfo==null){
+            return   ResultJson.failure(ResultCode.SERVER_ERROR,"用户存在吗?");
+           }
+           String value = "";
+           long userid = userDetail.getId();
+           if(changeBindDto.getBindtype()==0){
+               sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid,1);
+               value = redisUtil.get("SENDSMS:" +changeBindDto.getBind());
+               userInfo.setPhone(changeBindDto.getBind());
+           }else{
+               sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid,2);
+               value = redisUtil.get("SENDEMAIL:" +changeBindDto.getBind());
+               userInfo.setEmail(changeBindDto.getBind());
+           }
+           if(sysLoginType==null){
+               return   ResultJson.failure(ResultCode.SERVER_ERROR,"还未绑定相关");
+           }
+           if(value.equals(changeBindDto.getBindcode())){
+               sysLoginType.setLogin_name(changeBindDto.getBind());
+               sysLoginTypeDao.update(sysLoginType);
+               userInfoDao.update(userInfo);
+               redisUtil.remove("USERUNLOCKVERIFY:USERID:"+userDetail.getId()+"_"+ipaddress);
+               return ResultJson.ok();
+           }else {
+               return ResultJson.failure(ResultCode.BAD_REQUEST,"验证码错误");
+           }
+       }
+       return ResultJson.failure(ResultCode.BAD_REQUEST,"还未解锁无法进行操作");
+    }
+
+    @Override
+    public ResultJson beforeUserVerify(UserDetail userDetail, SinglePramDto singlePramDto) throws IOException {
+        UserInfo userInfo = userInfoDao.findByUserid(userDetail.getId());
+        if(userInfo==null){
+           return ResultJson.failure(ResultCode.SERVER_ERROR,"用户不存在");
+        }
+        SendVerificationCodeDto sendVerificationCodeDto =new SendVerificationCodeDto();
+        if(singlePramDto.getDoid().equals("0")&&StringUtils.isEmpty(userInfo.getPhone())){
+           return ResultJson.failure(ResultCode.SERVER_ERROR,"用户没有绑定手机");
+        }
+        if(singlePramDto.getDoid().equals("1")&&StringUtils.isEmpty(userInfo.getEmail())){
+            return ResultJson.failure(ResultCode.SERVER_ERROR,"用户没有绑定邮箱");
+        }
+        if(singlePramDto.getDoid().equals("0")){
+              sendVerificationCodeDto.setSend(userInfo.getPhone());
+              sendVerificationCode(sendVerificationCodeDto);
+              return ResultJson.ok();
+        }else if(singlePramDto.getDoid().equals("1")){
+              sendVerificationCodeDto.setSend(userInfo.getEmail());
+              sendEmailVerificationCode(sendVerificationCodeDto);
+              return ResultJson.ok();
+        }else{
+            return ResultJson.failure(ResultCode.SERVER_ERROR,"参数错误");
+        }
+    }
+
+
+    public Boolean UserUnlock(long userid,String ipaddress){
+        String key = redisUtil.get("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress);
+        if(StringUtils.isEmpty(key)){
+            return false;
+        }
+        return true;
+    }
+
+
     private Authentication authenticate(String username, String password) {
         try {
             //该方法会去调用userDetailsService.loadUserByUsername()去验证用户名和密码，如果正确，则存储该用户名密码到“security 的 context中”
@@ -111,5 +445,16 @@ public class AuthServiceImpl implements AuthService {
         } catch (DisabledException | BadCredentialsException e) {
             throw new CustomException(ResultJson.failure(ResultCode.LOGIN_ERROR, e.getMessage()));
         }
+    }
+
+
+
+    public static String randomCode() {
+        StringBuilder str = new StringBuilder();
+        Random random = new Random();
+        for (int i = 0; i < 6; i++) {
+            str.append(random.nextInt(10));
+        }
+        return str.toString();
     }
 }

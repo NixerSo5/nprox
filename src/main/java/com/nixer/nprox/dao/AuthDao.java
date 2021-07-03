@@ -1,9 +1,16 @@
 package com.nixer.nprox.dao;
 
+import com.nixer.nprox.entity.common.Buser;
 import com.nixer.nprox.entity.common.Role;
 import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.entity.swarm.SwarmUserDay;
+import com.nixer.nprox.entity.swarm.SwarmUserNodesNum;
+import com.nixer.nprox.entity.swarm.SwarmUserTotal;
+import com.nixer.nprox.entity.swarm.dto.ModifyPasswordDto;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 /**
  * @author JoeTao
@@ -45,4 +52,16 @@ public interface AuthDao {
      * @return
      */
     Role findRoleByUserId(@Param("userId") long userId);
+
+    void saveUserTotal(SwarmUserTotal swarmUserTotal);
+
+    void saveUserNodesNum(SwarmUserNodesNum swarmUserNodesNum);
+
+    void betchSaveUserDay(@Param("entities")List<SwarmUserDay> swarmUserDayList);
+
+    Buser findBuserById(Long userid);
+
+    void updatePassword(ModifyPasswordDto encode);
+
+    UserDetail findById(long userid);
 }

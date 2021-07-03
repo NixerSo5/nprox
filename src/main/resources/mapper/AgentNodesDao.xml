@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.AgentNodesDao">
+
+    <resultMap type="com.nixer.nprox.entity.AgentNodes" id="AgentNodesMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="agentid" column="agentid" jdbcType="INTEGER"/>
+        <result property="node_uid" column="node_uid" jdbcType="VARCHAR"/>
+        <result property="isuse" column="isuse" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="AgentNodesMap">
+        select id,
+               agentid,
+               node_uid,
+               isuse
+        from nprox.agent_nodes
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="AgentNodesMap">
+        select id,
+               agentid,
+               node_uid,
+               isuse
+        from nprox.agent_nodes limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="AgentNodesMap">
+        select
+        id, agentid, node_uid, isuse
+        from nprox.agent_nodes
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="agentid != null">
+                and agentid = #{agentid}
+            </if>
+            <if test="nodeUid != null and nodeUid != ''">
+                and node_uid = #{node_uid}
+            </if>
+            <if test="isuse != null">
+                and isuse = #{isuse}
+            </if>
+        </where>
+    </select>
+    <select id="agentPoolState" resultType="com.nixer.nprox.entity.swarm.dto.NodeNumDto">
+        SELECT COUNT(*)  as num,isuse FROM agent_nodes WHERE agentid = (SELECT id FROM agent WHERE owneruserid = #{userid})
+        GROUP BY isuse
+    </select>
+    <select id="agentNodesList" resultType="com.nixer.nprox.entity.swarm.dto.SwarmNodesDto">
+        SELECT
+            SN.CODE,
+            SN.server_code,
+            SN.peer_id,
+            SN.type,
+            SN.address,
+            SN.ip,
+            SN.area,
+            UI.`name` as owneruser,
+            UI.id as owneruserid,
+            SN.id as node_uid,
+            SN.state,
+            SUN.overtime,
+            AN.isuse
+        FROM
+            swarm_nodes SN
+                LEFT JOIN agent_nodes AN ON SN.id = AN.node_uid
+                LEFT JOIN swarm_user_nodes SUN ON SUN.node_uid = SN.id
+                LEFT JOIN sys_user  UI ON UI.id = SUN.userid
+
+        where  AN.agentid= #{agentid}
+        <if test="searchtext != null">
+            and UI.`name` LIKE CONCAT('%',#{searchtext},'%')
+        </if>
+
+        <if test="area != null">
+            and SN.area =#{area}
+        </if>
+
+        <if test="isuse != -1">
+            and 	AN.isuse  =#{isuse}
+        </if>
+
+    </select>
+    <select id="findNodesBindStatus" resultType="java.lang.Integer">
+        SELECT
+            count(*)
+        FROM
+            swarm_user_nodes
+        WHERE
+            userid = #{userid}
+          AND node_uid IN
+        <foreach collection="nodesUidDtoList" item="item" index="index" open="(" close=")" separator=",">
+            #{item.node_uid}
+        </foreach>
+    </select>
+    <select id="findUnUseNodesLimit" resultType="com.nixer.nprox.entity.AgentNodes">
+        select * from  agent_nodes where isuse = 0 limit 0,#{nodesnum}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_nodes(agentid, node_uid, isuse)
+        values (#{agentid}, #{node_uid}, #{isuse})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_nodes(agentid, node_uid, isuse)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.agentid}, #{entity.node_uid}, #{entity.isuse})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_nodes(agentid, node_uid, isuse)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.agentid}, #{entity.node_uid}, #{entity.isuse})
+        </foreach>
+        on duplicate key update
+        agentid = values(agentid) , node_uid = values(node_uid) , isuse = values(isuse)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.agent_nodes
+        <set>
+            <if test="agentid != null">
+                agentid = #{agentid},
+            </if>
+            <if test="node_uid != null and node_uid != ''">
+                node_uid = #{node_uid},
+            </if>
+            <if test="isuse != null">
+                isuse = #{isuse},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateAgentNodes">
+          update agent_nodes  set isuse =#{isuse} where agentid =#{id}
+          and node_uid IN
+        <foreach collection="nodesUidDtoList" item="item" index="index" open="(" close=")" separator=",">
+            #{item.node_uid}
+        </foreach>
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.agent_nodes
+        where id = #{id}
+    </delete>
+    <delete id="deleteByAgentIdAndUserId">
+        delete
+        from agent_nodes
+        where agentid=#{agentid} and userid = #{userid};
+    </delete>
+
+
+</mapper>
+

@@ -6,7 +6,7 @@ public enum ResultCode {
      */
     SUCCESS(200, "成功"),
 
-    BAD_REQUEST(400, "参数或者语法不对"),
+    BAD_REQUEST(400, "请求错误确认参数和方法"),
     UNAUTHORIZED(401, "认证失败"),
     LOGIN_ERROR(401, "登陆失败，用户名或密码无效"),
     FORBIDDEN(403, "禁止访问"),

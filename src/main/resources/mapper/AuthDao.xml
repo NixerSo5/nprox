@@ -3,6 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nixer.nprox.dao.AuthDao">
+    <update id="updatePassword">
+        update sys_user set password=#{newPsw} where id =#{userid}
+    </update>
     <select id="findByUsername" resultType="com.nixer.nprox.entity.common.UserDetail">
         SELECT id, name, password from sys_user where name = #{name};
     </select>
@@ -14,6 +17,21 @@
     <insert id="insertRole">
         insert into sys_user_role (user_id, role_id) VALUES (#{userId}, #{roleId});
     </insert>
+    <insert id="saveUserTotal" keyProperty="id" useGeneratedKeys="true">
+        insert into swarm_user_total(userid, total_cashout, total_send_bzz, total_get_bzz, total_node_num,bzz)
+        values (#{userid}, #{total_cashout}, #{total_send_bzz}, #{total_get_bzz}, #{total_node_num},#{bzz})
+    </insert>
+    <insert id="saveUserNodesNum" keyProperty="id" useGeneratedKeys="true">
+        insert into swarm_user_nodes_num (userid,nodes_num)
+        values (#{userid},#{nodes_num})
+    </insert>
+    <insert id="betchSaveUserDay" keyProperty="id" useGeneratedKeys="true">
+            insert into swarm_user_day(userid, cash_out, bzz, date, utime, node_num)
+            values
+            <foreach collection="entities" item="entity" separator=",">
+                (#{entity.userid}, #{entity.cash_out}, #{entity.bzz}, #{entity.date}, NOW(), #{entity.node_num})
+            </foreach>
+    </insert>
 
     <select id="findRoleById" resultType="com.nixer.nprox.entity.common.Role">
       select id, name, nameZh from sys_role where id = #{roleId}
@@ -21,5 +39,12 @@
 
     <select id="findRoleByUserId" resultType="com.nixer.nprox.entity.common.Role">
         select * from sys_role where id in (SELECT role_id from sys_user_role where user_id = #{userId});
+    </select>
+
+    <select id="findBuserById" resultType="com.nixer.nprox.entity.common.Buser">
+        select SU.*,UI.phone from sys_user  SU LEFT JOIN user_info UI ON UI.userid=SU.id where SU.id = #{id}
+    </select>
+    <select id="findById" resultType="com.nixer.nprox.entity.common.UserDetail">
+        SELECT id, name, password from sys_user where id=#{userid}
     </select>
 </mapper>

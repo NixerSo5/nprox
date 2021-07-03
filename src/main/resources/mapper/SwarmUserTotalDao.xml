@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.SwarmUserTotalDao">
+
+    <resultMap type="com.nixer.nprox.entity.SwarmUserTotal" id="SwarmUserTotalMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="totalCashout" column="total_cashout" jdbcType="INTEGER"/>
+        <result property="totalSendBzz" column="total_send_bzz" jdbcType="INTEGER"/>
+        <result property="totalGetBzz" column="total_get_bzz" jdbcType="INTEGER"/>
+        <result property="bzz" column="bzz" jdbcType="INTEGER"/>
+        <result property="totalNodeNum" column="total_node_num" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="SwarmUserTotalMap">
+        select id,
+               userid,
+               total_cashout,
+               total_send_bzz,
+               total_get_bzz,
+               bzz,
+               total_node_num
+        from nprox.swarm_user_total
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="SwarmUserTotalMap">
+        select id,
+               userid,
+               total_cashout,
+               total_send_bzz,
+               total_get_bzz,
+               bzz,
+               total_node_num
+        from nprox.swarm_user_total limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="SwarmUserTotalMap">
+        select
+        id, userid, total_cashout, total_send_bzz, total_get_bzz, bzz, total_node_num
+        from nprox.swarm_user_total
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="userid != null">
+                and userid = #{userid}
+            </if>
+            <if test="totalCashout != null">
+                and total_cashout = #{totalCashout}
+            </if>
+            <if test="totalSendBzz != null">
+                and total_send_bzz = #{totalSendBzz}
+            </if>
+            <if test="totalGetBzz != null">
+                and total_get_bzz = #{totalGetBzz}
+            </if>
+            <if test="bzz != null">
+                and bzz = #{bzz}
+            </if>
+            <if test="totalNodeNum != null">
+                and total_node_num = #{totalNodeNum}
+            </if>
+        </where>
+    </select>
+    <select id="findByUserId" resultType="com.nixer.nprox.entity.SwarmUserTotal">
+        select * from  swarm_user_total where  userid=#{userid}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_total(userid, total_cashout, total_send_bzz, total_get_bzz, bzz, total_node_num)
+        values (#{userid}, #{totalCashout}, #{totalSendBzz}, #{totalGetBzz}, #{bzz}, #{totalNodeNum})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_total(userid, total_cashout, total_send_bzz, total_get_bzz, bzz, total_node_num)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.totalCashout}, #{entity.totalSendBzz}, #{entity.totalGetBzz}, #{entity.bzz},
+            #{entity.totalNodeNum})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.swarm_user_total(userid, total_cashout, total_send_bzz, total_get_bzz, bzz, total_node_num)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.totalCashout}, #{entity.totalSendBzz}, #{entity.totalGetBzz}, #{entity.bzz},
+            #{entity.totalNodeNum})
+        </foreach>
+        on duplicate key update
+        userid = values(userid) , total_cashout = values(total_cashout) , total_send_bzz = values(total_send_bzz) ,
+        total_get_bzz = values(total_get_bzz) , bzz = values(bzz) , total_node_num = values(total_node_num)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.swarm_user_total
+        <set>
+            <if test="userid != null">
+                userid = #{userid},
+            </if>
+            <if test="totalCashout != null">
+                total_cashout = #{totalCashout},
+            </if>
+            <if test="totalSendBzz != null">
+                total_send_bzz = #{totalSendBzz},
+            </if>
+            <if test="totalGetBzz != null">
+                total_get_bzz = #{totalGetBzz},
+            </if>
+            <if test="bzz != null">
+                bzz = #{bzz},
+            </if>
+            <if test="totalNodeNum != null">
+                total_node_num = #{totalNodeNum},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateNodeNumByUserid">
+        update swarm_user_total  set  total_node_num =total_node_num+#{updatenodes}
+        where userid=#{userid}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.swarm_user_total
+        where id = #{id}
+    </delete>
+
+</mapper>
+

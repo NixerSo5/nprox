@@ -13,12 +13,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 import springfox.documentation.swagger2.annotations.EnableSwagger2;
 
 @MapperScan("com.nixer.nprox.dao")
 @SpringBootApplication
 @EnableSwagger2
 @EnableAsync
+@EnableTransactionManagement
 public class NproxApplication {
 
 
@@ -29,7 +31,6 @@ public class NproxApplication {
         honnyPoolStateThread.HonnyPoolStateThreadRun();
         honnyPoolDay.HonnyPoolDayThreadRun();
     }
-
 
     @Bean
     public FilterRegistrationBean registration(JwtAuthenticationTokenFilter filter) {

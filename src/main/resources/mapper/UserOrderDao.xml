@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.UserOrderDao">
+
+    <resultMap type="com.nixer.nprox.entity.swarm.UserOrder" id="UserOrderMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="serviceType" column="service_type" jdbcType="INTEGER"/>
+        <result property="date" column="date" jdbcType="TIMESTAMP"/>
+        <result property="currencyType" column="currency_type" jdbcType="VARCHAR"/>
+        <result property="quantity" column="quantity" jdbcType="NUMERIC"/>
+        <result property="serviceCharges" column="service_charges" jdbcType="NUMERIC"/>
+        <result property="withdrawAddress" column="withdraw_address" jdbcType="VARCHAR"/>
+        <result property="remarks" column="remarks" jdbcType="VARCHAR"/>
+        <result property="status" column="status" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="UserOrderMap">
+        select id,
+               userid,
+               service_type, date, currency_type, quantity, service_charges, withdraw_address, remarks, status
+        from nprox.user_order
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="UserOrderMap">
+        select id,
+               userid,
+               service_type, date, currency_type, quantity, service_charges, withdraw_address, remarks, status
+        from nprox.user_order
+            limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="UserOrderMap">
+        select
+        id, userid, service_type, date, currency_type, quantity, service_charges, withdraw_address, remarks, status
+        from nprox.user_order
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="userid != null">
+                and userid = #{userid}
+            </if>
+            <if test="serviceType != null">
+                and service_type = #{serviceType}
+            </if>
+            <if test="date != null">
+                and date = #{date}
+            </if>
+            <if test="currencyType != null and currencyType != ''">
+                and currency_type = #{currencyType}
+            </if>
+            <if test="quantity != null">
+                and quantity = #{quantity}
+            </if>
+            <if test="serviceCharges != null">
+                and service_charges = #{serviceCharges}
+            </if>
+            <if test="withdrawAddress != null and withdrawAddress != ''">
+                and withdraw_address = #{withdrawAddress}
+            </if>
+            <if test="remarks != null and remarks != ''">
+                and remarks = #{remarks}
+            </if>
+            <if test="status != null">
+                and status = #{status}
+            </if>
+        </where>
+    </select>
+    <select id="userOrderList" resultType="com.nixer.nprox.entity.swarm.UserOrder">
+        select  * from  user_order  where  userid =#{userid}
+        <if test="state != -1">
+            AND `status` = #{state}
+        </if>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.user_order(userid, service_type, date, currency_type, quantity, service_charges,
+                                     withdraw_address, remarks, status)
+        values (#{userid}, #{serviceType}, now(), #{currencyType}, #{quantity}, #{serviceCharges}, #{withdrawAddress},
+                #{remarks}, #{status})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.user_order(userid, service_type, date, currency_type, quantity, service_charges,
+        withdraw_address, remarks, status)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.serviceType}, #{entity.date}, #{entity.currencyType}, #{entity.quantity},
+            #{entity.serviceCharges}, #{entity.withdrawAddress}, #{entity.remarks}, #{entity.status})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.user_order(userid, service_type, date, currency_type, quantity, service_charges,
+        withdraw_address, remarks, status)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.serviceType}, #{entity.date}, #{entity.currencyType}, #{entity.quantity},
+            #{entity.serviceCharges}, #{entity.withdrawAddress}, #{entity.remarks}, #{entity.status})
+        </foreach>
+        on duplicate key update
+        userid = values(userid) , service_type = values(service_type) , date = values(date) , currency_type =
+        values(currency_type) , quantity = values(quantity) , service_charges = values(service_charges) ,
+        withdraw_address = values(withdraw_address) , remarks = values(remarks) , status = values(status)
+    </insert>
+
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.user_order
+        <set>
+            <if test="userid != null">
+                userid = #{userid},
+            </if>
+            <if test="serviceType != null">
+                service_type = #{serviceType},
+            </if>
+            <if test="date != null">
+                date = #{date},
+            </if>
+            <if test="currencyType != null and currencyType != ''">
+                currency_type = #{currencyType},
+            </if>
+            <if test="quantity != null">
+                quantity = #{quantity},
+            </if>
+            <if test="serviceCharges != null">
+                service_charges = #{serviceCharges},
+            </if>
+            <if test="withdrawAddress != null and withdrawAddress != ''">
+                withdraw_address = #{withdrawAddress},
+            </if>
+            <if test="remarks != null and remarks != ''">
+                remarks = #{remarks},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.user_order
+        where id = #{id}
+    </delete>
+
+</mapper>
+

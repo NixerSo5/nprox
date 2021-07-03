@@ -7,7 +7,6 @@ import com.github.pagehelper.PageInfo;
 import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.entity.swarm.SwarmDay;
 import com.nixer.nprox.entity.swarm.SwarmNodes;
-import com.nixer.nprox.entity.swarm.SwarmUserNode;
 import com.nixer.nprox.entity.swarm.SwarmUserTotal;
 import com.nixer.nprox.entity.swarm.dto.*;
 import com.nixer.nprox.service.auth.AuthService;
@@ -79,10 +78,10 @@ public class SwarmController {
     }
     //节点列表
     @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
-    @PostMapping("/useNodesList")
+    @PostMapping("/userNodesList")
     @ApiOperation(value = "用户节点状态")
     @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson<PageInfo<SwarmNodes>> useNodesList(HttpServletRequest request, @RequestBody NodesFindDto nodesFindDto){
+    public ResultJson<PageInfo<SwarmNodes>> userNodesList(HttpServletRequest request, @RequestBody NodesFindDto nodesFindDto){
         String token = request.getHeader(tokenHeader);
         if (token == null) {
             return ResultJson.failure(ResultCode.UNAUTHORIZED);
@@ -92,56 +91,54 @@ public class SwarmController {
         PageInfo<SwarmNodes> swarmNodesPageInfo = swarmService.useNodesList(nodesFindDto,userid);
         return ResultJson.ok(swarmNodesPageInfo);
     }
-    //新增节点
-    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
-    @PostMapping("/useNodesAdd")
-    @ApiOperation(value = "用户节点新增")
-    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson useNodesAdd(HttpServletRequest request, @RequestBody UserNodeUpdateDto userNodeUpdateDto){
-        String token = request.getHeader(tokenHeader);
-        if (token == null) {
-            return ResultJson.failure(ResultCode.UNAUTHORIZED);
-        }
-        UserDetail userDetail = authService.getUserByToken(token);
-        long userid = userDetail.getId();//userid
-        ResultJson resultJson = swarmService.useNodesAdd(userNodeUpdateDto,userid);
-        return resultJson;
-    }
-    //删除节点
-    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
-    @PostMapping("/useNodesDel")
-    @ApiOperation(value = "用户节点删除")
-    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson useNodesDel(HttpServletRequest request, @RequestBody UserNodeUpdateDto userNodeUpdateDto){
-        String token = request.getHeader(tokenHeader);
-        if (token == null) {
-            return ResultJson.failure(ResultCode.UNAUTHORIZED);
-        }
-        UserDetail userDetail = authService.getUserByToken(token);
-        long userid = userDetail.getId();//userid
-        ResultJson resultJson = swarmService.useNodesDel(userNodeUpdateDto,userid);
-        return resultJson;
-    }
+//    //新增节点
+//    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
+//    @PostMapping("/userNodesAdd")
+//    @ApiOperation(value = "用户节点新增")
+//    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+//    public ResultJson userNodesAdd(HttpServletRequest request, @RequestBody UserNodeUpdateDto userNodeUpdateDto){
+//        String token = request.getHeader(tokenHeader);
+//        if (token == null) {
+//            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+//        }
+//        UserDetail userDetail = authService.getUserByToken(token);
+//        long userid = userDetail.getId();//userid
+//        ResultJson resultJson = swarmService.useNodesAdd(userNodeUpdateDto,userid);
+//        return resultJson;
+//    }
+//    //删除节点
+//    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
+//    @PostMapping("/userNodesDel")
+//    @ApiOperation(value = "用户节点删除")
+//    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+//    public ResultJson userNodesDel(HttpServletRequest request, @RequestBody UserNodeUpdateDto userNodeUpdateDto){
+//        String token = request.getHeader(tokenHeader);
+//        if (token == null) {
+//            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+//        }
+//        UserDetail userDetail = authService.getUserByToken(token);
+//        long userid = userDetail.getId();//userid
+//        ResultJson resultJson = swarmService.useNodesDel(userNodeUpdateDto,userid);
+//        return resultJson;
+//    }
+//
+//
+//    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
+//    @PostMapping(value = "/userNodesExcelAppend" ,consumes = "multipart/*" ,headers = "content-type=multipart/form-data")
+//    @ApiOperation(value = "节点批量导入")
+//    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+//    public ResultJson userNodesDel( @ApiParam(value = "文件",required = true)MultipartFile file,HttpServletRequest request){
+//        String token = request.getHeader(tokenHeader);
+//        if (token == null) {
+//            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+//        }
+//        List<MultipartFile> files = ((MultipartHttpServletRequest) request).getFiles("file");
+//        UserDetail userDetail = authService.getUserByToken(token);
+//        long userid = userDetail.getId();//userid
+//        return ResultJson.ok();
+//    }
 
 
-    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
-    @PostMapping(value = "/useNodesExcelAppend" ,consumes = "multipart/*" ,headers = "content-type=multipart/form-data")
-    @ApiOperation(value = "节点批量导入")
-    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson useNodesDel( @ApiParam(value = "文件",required = true)MultipartFile file,HttpServletRequest request){
-        String token = request.getHeader(tokenHeader);
-        if (token == null) {
-            return ResultJson.failure(ResultCode.UNAUTHORIZED);
-        }
-        List<MultipartFile> files = ((MultipartHttpServletRequest) request).getFiles("file");
-        UserDetail userDetail = authService.getUserByToken(token);
-        long userid = userDetail.getId();//userid
-        return ResultJson.ok();
-    }
-
-
-
-    //导入节点
 
 
 

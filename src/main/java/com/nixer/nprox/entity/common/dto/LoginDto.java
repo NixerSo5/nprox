@@ -1,15 +1,17 @@
 package com.nixer.nprox.entity.common.dto;
 
-public class LoginDto {
-    private String username;
+public class LoginDto extends BindLoginDto{
+
     private String password;
 
-    public String getUsername() {
-        return username;
+    private String vrifycode;
+
+    public String getVrifycode() {
+        return vrifycode;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setVrifycode(String vrifycode) {
+        this.vrifycode = vrifycode;
     }
 
     public String getPassword() {
@@ -19,4 +21,5 @@ public class LoginDto {
     public void setPassword(String password) {
         this.password = password;
     }
+
 }

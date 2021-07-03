@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.AgentLevelDao">
+
+    <resultMap type="com.nixer.nprox.entity.AgentLevel" id="AgentLevelMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="agentid" column="agentid" jdbcType="INTEGER"/>
+        <result property="level" column="level" jdbcType="VARCHAR"/>
+        <result property="need_nodes" column="need_nodes" jdbcType="INTEGER"/>
+        <result property="charges" column="charges" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="AgentLevelMap">
+        select id,
+               agentid,
+               `level`,
+               need_nodes,
+               charges
+        from nprox.agent_level
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="AgentLevelMap">
+        select id,
+               agentid,
+               `level`,
+               need_nodes,
+               charges
+        from nprox.agent_level limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="AgentLevelMap">
+        select
+        id, agentid, `level`, need_nodes, charges
+        from nprox.agent_level
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="agentid != null">
+                and agentid = #{agentid}
+            </if>
+            <if test="level != null">
+                and `level` = #{level}
+            </if>
+            <if test="need_nodes != null">
+                and need_nodes = #{need_nodes}
+            </if>
+            <if test="charges != null">
+                and charges = #{charges}
+            </if>
+        </where>
+    </select>
+    <select id="getAgentLevelListByAgentId" resultType="com.nixer.nprox.entity.AgentLevel">
+        select * from agent_level  where     agentid = #{id}  order by need_nodes asc
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_level(agentid, `level`, need_nodes, charges)
+        values (#{agentid}, #{level}, #{need_nodes}, #{charges})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_level(agentid, `level`, need_nodes, charges)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.agentid}, #{entity.level}, #{entity.need_nodes}, #{entity.charges})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_level(agentid, `level`, need_nodes, charges)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.agentid}, #{entity.level}, #{entity.need_nodes}, #{entity.charges})
+        </foreach>
+        on duplicate key update
+        agentid = values(agentid) , level = values(level) , need_nodes = values(need_nodes) , charges = values(charges)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.agent_level
+        <set>
+            <if test="agentid != null">
+                agentid = #{agentid},
+            </if>
+            <if test="level != null">
+                level = #{level},
+            </if>
+            <if test="need_nodes != null">
+                need_nodes = #{need_nodes},
+            </if>
+            <if test="charges != null">
+                charges = #{charges},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.agent_level
+        where id = #{id}
+    </delete>
+
+</mapper>
+

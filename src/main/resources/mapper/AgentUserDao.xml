@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.AgentUserDao">
+
+    <resultMap type="com.nixer.nprox.entity.AgentUser" id="AgentUserMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="agentid" column="agentid" jdbcType="INTEGER"/>
+        <result property="charges" column="charges" jdbcType="INTEGER"/>
+        <result property="levelid" column="levelid" jdbcType="INTEGER"/>
+        <result property="phone" column="phone" jdbcType="VARCHAR"/>
+        <result property="note" column="note" jdbcType="VARCHAR"/>
+        <result property="state" column="state" jdbcType="INTEGER"/>
+        <result property="nodeNum" column="node_num" jdbcType="INTEGER"/>
+        <result property="ctime" column="ctime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="AgentUserMap">
+        select id,
+               userid,
+               agentid,
+               charges,
+               levelid,
+               phone,
+               note,
+               state,
+               node_num,
+               ctime
+        from nprox.agent_user
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="AgentUserMap">
+        select id,
+               userid,
+               agentid,
+               charges,
+               levelid,
+               phone,
+               note,
+               state,
+               node_num,
+               ctime
+        from nprox.agent_user limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="AgentUserMap">
+        select
+        id, userid, agentid, charges, levelid, phone, note, state, node_num, ctime
+        from nprox.agent_user
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="userid != null">
+                and userid = #{userid}
+            </if>
+            <if test="agentid != null">
+                and agentid = #{agentid}
+            </if>
+            <if test="charges != null">
+                and charges = #{charges}
+            </if>
+            <if test="levelid != null">
+                and levelid = #{levelid}
+            </if>
+            <if test="phone != null and phone != ''">
+                and phone = #{phone}
+            </if>
+            <if test="note != null and note != ''">
+                and note = #{note}
+            </if>
+            <if test="state != null">
+                and state = #{state}
+            </if>
+            <if test="nodeNum != null">
+                and node_num = #{nodeNum}
+            </if>
+            <if test="ctime != null">
+                and ctime = #{ctime}
+            </if>
+        </where>
+    </select>
+    <select id="getUserCharges" resultType="com.nixer.nprox.entity.AgentUser">
+        select *
+        from agent_user
+        where userid = #{userid} and agentid=#{agentid}
+    </select>
+    <select id="getAgentUserByLevel" resultType="com.nixer.nprox.entity.AgentUser">
+        select *
+        from agent_user
+        where agentid = #{agentid}
+          and levelid = #{id}
+    </select>
+    <select id="getAgentUserByUseridAndAgentid" resultType="com.nixer.nprox.entity.AgentUser">
+        select *
+        from agent_user
+        where agentid = #{agentid}
+          and userid = #{userid}
+    </select>
+    <select id="agentUserList" resultType="com.nixer.nprox.entity.swarm.dto.AgentUserDto">
+        SELECT
+        AU.*,
+        SU.`name` AS username,
+        IFNULL( SUNN.nodes_num, 0 ) AS has_nodes_num ,
+        AL.`level`
+        FROM
+        agent_user AU
+        LEFT JOIN sys_user SU ON SU.id = AU.userid
+        LEFT JOIN swarm_user_nodes_num SUNN ON SUNN.userid = AU.userid
+        LEFT JOIN agent_level AL ON AL.id = AU.levelid
+        where AU.agentid=#{agentid}
+        <if test="state != -1">
+            and AU.`state` = #{state}
+        </if>
+        <if test="levelid != -1">
+            and AU.`levelid` = #{levelid}
+        </if>
+        <if test="searchtext!=null">
+            and SU.name LIKE CONCAT('%',#{searchtext},'%') or AU.phone LIKE CONCAT('%',#{searchtext},'%')
+        </if>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_user(userid, agentid, charges, levelid, phone, note, state, node_num, ctime)
+        values (#{userid}, #{agentid}, #{charges}, #{levelid}, #{phone}, #{note}, #{state}, #{nodeNum}, now())
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_user(userid, agentid, charges, levelid, phone, note, state, node_num, ctime)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.agentid}, #{entity.charges}, #{entity.levelid}, #{entity.phone}, #{entity.note},
+            #{entity.state}, #{entity.nodeNum}, #{entity.ctime})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.agent_user(userid, agentid, charges, levelid, phone, note, state, node_num, ctime)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.agentid}, #{entity.charges}, #{entity.levelid}, #{entity.phone}, #{entity.note},
+            #{entity.state}, #{entity.nodeNum}, #{entity.ctime})
+        </foreach>
+        on duplicate key update
+        userid = values(userid) , agentid = values(agentid) , charges = values(charges) , levelid = values(levelid) ,
+        phone = values(phone) , note = values(note) , state = values(state) , node_num = values(node_num) , ctime =
+        values(ctime)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.agent_user
+        <set>
+            <if test="userid != null">
+                userid = #{userid},
+            </if>
+            <if test="agentid != null">
+                agentid = #{agentid},
+            </if>
+            <if test="charges != null">
+                charges = #{charges},
+            </if>
+            <if test="levelid != null">
+                levelid = #{levelid},
+            </if>
+            <if test="phone != null and phone != ''">
+                phone = #{phone},
+            </if>
+            <if test="note != null and note != ''">
+                note = #{note},
+            </if>
+            <if test="state != null">
+                state = #{state},
+            </if>
+            <if test="nodeNum != null">
+                node_num = #{nodeNum},
+            </if>
+            <if test="ctime != null">
+                ctime = #{ctime},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateUserChargesByAgentLevel">
+        update agent_user
+        set charges = #{charges}
+        where agentid = #{agentid}
+          and levelid = #{id}
+    </update>
+    <update id="updateUserStatus">
+        update agent_user set `state`=#{status} where agentid=#{agentid} and userid =#{userid}
+    </update>
+    <update id="updateUserLevelAndCharge">
+        update agent_user set charges = #{agentLevel.charges},levelid=#{agentLevel.id}
+        where userid =#{userid} and agentid=#{agentLevel.agentid}
+    </update>
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.agent_user
+        where id = #{id}
+    </delete>
+
+</mapper>
+

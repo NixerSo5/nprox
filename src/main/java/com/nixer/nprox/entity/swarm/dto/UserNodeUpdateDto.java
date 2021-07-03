@@ -6,14 +6,14 @@ import io.swagger.annotations.ApiModelProperty;
 @ApiModel
 public class UserNodeUpdateDto {
 
-    @ApiModelProperty(value = "节点地址以太")
-    private String  address;
+    @ApiModelProperty(value = "地址uid")
+    private String  node_uid;
 
-    public String getAddress() {
-        return address;
+    public String getNode_uid() {
+        return node_uid;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setNode_uid(String node_uid) {
+        this.node_uid = node_uid;
     }
 }

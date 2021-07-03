@@ -19,6 +19,7 @@ public class UserDetail implements UserDetails {
     private String password;
     private Role role;
     private Date lastPasswordResetDate;
+    private String lastip;
 
     public UserDetail(
             long id,
@@ -88,6 +89,14 @@ public class UserDetail implements UserDetails {
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
+    }
+
+    public String getLastip() {
+        return lastip;
+    }
+
+    public void setLastip(String lastip) {
+        this.lastip = lastip;
     }
 
     /** 账户是否激活
