@@ -21,6 +21,10 @@ public class UserOrderDto {
     @ApiModelProperty(value="备注")
     private String  remarks;// '备注',
 
+    @ApiModelProperty(value="币种id")
+    private String  tokenid;
+
+
     @ApiModelProperty(hidden = true)
     private String doipaddr;
 
@@ -63,5 +67,13 @@ public class UserOrderDto {
 
     public void setDoipaddr(String doipaddr) {
         this.doipaddr = doipaddr;
+    }
+
+    public String getTokenid() {
+        return tokenid;
+    }
+
+    public void setTokenid(String tokenid) {
+        this.tokenid = tokenid;
     }
 }

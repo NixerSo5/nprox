@@ -20,6 +20,7 @@ public class UserDetail implements UserDetails {
     private Role role;
     private Date lastPasswordResetDate;
     private String lastip;
+    private Integer freeze;
 
     public UserDetail(
             long id,
@@ -31,6 +32,7 @@ public class UserDetail implements UserDetails {
         this.username = username;
         this.password = password;
         this.role = role;
+      //  this.freeze = freeze;
 //        this.lastPasswordResetDate = lastPasswordResetDate;
     }
 
@@ -44,6 +46,13 @@ public class UserDetail implements UserDetails {
         this.id = id;
         this.username = username;
         this.password = password;
+    }
+
+    public UserDetail(long id, String username, String password,Integer freeze) {
+        this.id = id;
+        this.username = username;
+        this.password = password;
+        this.freeze = freeze;
     }
 
     //返回分配给用户的角色列表
@@ -132,5 +141,13 @@ public class UserDetail implements UserDetails {
 
     public void setLastPasswordResetDate(Date lastPasswordResetDate) {
         this.lastPasswordResetDate = lastPasswordResetDate;
+    }
+
+    public Integer getFreeze() {
+        return freeze;
+    }
+
+    public void setFreeze(Integer freeze) {
+        this.freeze = freeze;
     }
 }

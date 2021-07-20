@@ -1,6 +1,10 @@
 package com.nixer.nprox.service.swarm;
 
 import com.github.pagehelper.PageInfo;
+import com.nixer.nprox.entity.SwarmTokenTotal;
+import com.nixer.nprox.entity.SwarmTokens;
+import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.entity.common.dto.PageFindDto;
 import com.nixer.nprox.entity.swarm.SwarmNodes;
 import com.nixer.nprox.entity.swarm.dto.*;
 import com.nixer.nprox.tools.ResultJson;
@@ -23,4 +27,12 @@ public interface SwarmService {
 //    ResultJson useNodesDel(UserNodeUpdateDto userNodeUpdateDto, long userid);
 
     int getNodesNum();
+
+    PageInfo<SwarmTokens> tokensList(PageFindDto pageFindDto, long userid);
+
+    ResultJson<List<UserWalletDto>> userWallet(UserDetail userDetail);
+
+    ResultJson activeWallet(long id, ActiveWalletDto activeWalletDto);
+
+    SwarmTokenTotal tokensInfo(WalletInfoDto walletInfoDto);
 }

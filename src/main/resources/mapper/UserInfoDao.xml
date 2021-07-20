@@ -10,8 +10,6 @@
         <result property="imgurl" column="imgurl" jdbcType="VARCHAR"/>
         <result property="email" column="email" jdbcType="VARCHAR"/>
         <result property="phone" column="phone" jdbcType="VARCHAR"/>
-        <result property="cashDai" column="cash_dai" jdbcType="NUMERIC"/>
-        <result property="cashoutBzz" column="cashout_bzz" jdbcType="NUMERIC"/>
     </resultMap>
 
     <!--查询单个-->
@@ -70,12 +68,6 @@
             <if test="phone != null and phone != ''">
                 and phone = #{phone}
             </if>
-            <if test="cashDai != null">
-                and cash_dai = #{cashDai}
-            </if>
-            <if test="cashoutBzz != null">
-                and cashout_bzz = #{cashoutBzz}
-            </if>
         </where>
     </select>
     <select id="findByUserid" resultType="com.nixer.nprox.entity.swarm.UserInfo">
@@ -90,29 +82,29 @@
 
     <!--新增所有列-->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">
-        insert into nprox.user_info(userid, address, nickname, imgurl, email, phone, cash_dai, cashout_bzz,ctime,utime)
-        values (#{userid}, #{address}, #{nickname}, #{imgurl}, #{email}, #{phone}, #{cashDai}, #{cashoutBzz},now(),now())
+        insert into nprox.user_info(userid, address, nickname, imgurl, email, phone,ctime,utime)
+        values (#{userid}, #{address}, #{nickname}, #{imgurl}, #{email}, #{phone},now(),now())
     </insert>
 
     <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into nprox.user_info(userid, address, nickname, imgurl, email, phone, cash_dai, cashout_bzz)
+        insert into nprox.user_info(userid, address, nickname, imgurl, email, phone)
         values
         <foreach collection="entities" item="entity" separator=",">
             (#{entity.userid}, #{entity.address}, #{entity.nickname}, #{entity.imgurl}, #{entity.email},
-            #{entity.phone}, #{entity.cashDai}, #{entity.cashoutBzz})
+            #{entity.phone})
         </foreach>
     </insert>
 
     <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into nprox.user_info(userid, address, nickname, imgurl, email, phone, cash_dai, cashout_bzz)
+        insert into nprox.user_info(userid, address, nickname, imgurl, email, phone)
         values
         <foreach collection="entities" item="entity" separator=",">
             (#{entity.userid}, #{entity.address}, #{entity.nickname}, #{entity.imgurl}, #{entity.email},
-            #{entity.phone}, #{entity.cashDai}, #{entity.cashoutBzz})
+            #{entity.phone})
         </foreach>
         on duplicate key update
         userid = values(userid) , address = values(address) , nickname = values(nickname) , imgurl = values(imgurl) ,
-        email = values(email) , phone = values(phone) , cash_dai = values(cash_dai) , cashout_bzz = values(cashout_bzz)
+        email = values(email) , phone = values(phone)
     </insert>
 
     <!--通过主键修改数据-->
@@ -136,12 +128,6 @@
             </if>
             <if test="phone != null and phone != ''">
                 phone = #{phone},
-            </if>
-            <if test="cashDai != null">
-                cash_dai = #{cashDai},
-            </if>
-            <if test="cashoutBzz != null">
-                cashout_bzz = #{cashoutBzz},
             </if>
         </set>
         where id = #{id}

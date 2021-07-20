@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 public class BindLoginDto {
 
-    @ApiModelProperty(hidden = true)
+    @ApiModelProperty(value="账号")
     private String username;
 
     @ApiModelProperty(value="账号验证码  如果是手机号注册为手机号验证码  如果为邮箱注册为邮箱验证码")

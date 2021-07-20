@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.UserWalletDao">
+
+    <resultMap type="com.nixer.nprox.entity.UserWallet" id="UserWalletMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="tokenid" column="tokenid" jdbcType="INTEGER"/>
+        <result property="cashout" column="cashout" jdbcType="INTEGER"/>
+        <result property="balance" column="balance" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="UserWalletMap">
+        select id,
+               userid,
+               tokenid,
+               cashout,
+               balance
+        from nprox.user_wallet
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="UserWalletMap">
+        select id,
+               userid,
+               tokenid,
+               cashout,
+               balance
+        from nprox.user_wallet limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="UserWalletMap">
+        select
+        id, userid, tokenid, cashout, balance
+        from nprox.user_wallet
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="userid != null">
+                and userid = #{userid}
+            </if>
+            <if test="tokenid != null">
+                and tokenid = #{tokenid}
+            </if>
+            <if test="cashout != null">
+                and cashout = #{cashout}
+            </if>
+            <if test="balance != null and balance != ''">
+                and balance = #{balance}
+            </if>
+        </where>
+    </select>
+    <select id="getWalletListByUserId" resultType="com.nixer.nprox.entity.swarm.dto.UserWalletDto">
+        SELECT
+            ST.id as tokenid,
+            tokenname,
+            tokenimgurl,
+            IFNULL(cashout,0) AS cashout,
+            IFNULL(balance,0) AS balance,
+            ST.gcd,
+            IFNULL(UW.id,0) AS  isactive,
+            IFNULL(UW.unitnum,0) AS  unitnum
+        FROM
+            swarm_tokens ST
+                LEFT  JOIN (SELECT * FROM user_wallet WHERE userid= #{userid}) UW ON ST.id = UW.tokenid
+    </select>
+    <select id="getWalletByUserIdAndTokenId" resultType="com.nixer.nprox.entity.UserWallet">
+         select * from     user_wallet  where userid=#{userid} and tokenid = #{tokenid}
+
+
+    </select>
+    <select id="findByUserAndTokenId" resultType="com.nixer.nprox.entity.UserWallet">
+        select *  from user_wallet  where  userid= #{userid} and  tokenid = #{tokenid}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.user_wallet(userid, tokenid, cashout, balance)
+        values (#{userid}, #{tokenid}, #{cashout}, #{balance})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.user_wallet(userid, tokenid, cashout, balance)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.tokenid}, #{entity.cashout}, #{entity.balance})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.user_wallet(userid, tokenid, cashout, balance)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.tokenid}, #{entity.cashout}, #{entity.balance})
+        </foreach>
+        on duplicate key update
+        userid = values(userid) , tokenid = values(tokenid) , cashout = values(cashout) , balance = values(balance)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.user_wallet
+        <set>
+            <if test="userid != null">
+                userid = #{userid},
+            </if>
+            <if test="tokenid != null">
+                tokenid = #{tokenid},
+            </if>
+            <if test="cashout != null">
+                cashout = #{cashout},
+            </if>
+            <if test="balance != null and balance != ''">
+                balance = #{balance},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateWalletBlance">
+        update user_wallet set balance =balance -#{sublog} where id =#{walletid}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.user_wallet
+        where id = #{id}
+    </delete>
+
+</mapper>
+

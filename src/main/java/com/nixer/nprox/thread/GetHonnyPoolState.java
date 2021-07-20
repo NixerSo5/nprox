@@ -27,7 +27,7 @@ public class GetHonnyPoolState {
     public void HonnyPoolStateThreadRun() {
         //TODO 这个应该放入循环中
         int nodeNum = service.getNodesNum();
-        nodeNum = 3607;
+        nodeNum = 22;
         redisUtil.set("POOL:NODES",String.valueOf(nodeNum));
         while (true) {
             try {

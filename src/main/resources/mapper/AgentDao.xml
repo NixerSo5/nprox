@@ -73,7 +73,7 @@
         on duplicate key update
         name = values(name) , owneruserid = values(owneruserid)
     </insert>
-    <insert id="insertAgentOrder">
+    <insert id="insertAgentOrder" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO agent_order
         (`orderid`, `userid`, `charges`, `orderbzz`, `getbzz`, `ctime`, `issend`)
         VALUES

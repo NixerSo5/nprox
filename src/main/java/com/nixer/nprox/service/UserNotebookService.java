@@ -3,10 +3,7 @@ package com.nixer.nprox.service;
 import com.github.pagehelper.PageInfo;
 import com.nixer.nprox.entity.swarm.UserNotebook;
 import com.nixer.nprox.entity.swarm.UserOrder;
-import com.nixer.nprox.entity.swarm.dto.NodesFindDto;
-import com.nixer.nprox.entity.swarm.dto.NoteBookDto;
-import com.nixer.nprox.entity.swarm.dto.UserAccount;
-import com.nixer.nprox.entity.swarm.dto.UserOrderDto;
+import com.nixer.nprox.entity.swarm.dto.*;
 import com.nixer.nprox.tools.ResultJson;
 
 import java.util.List;
@@ -62,7 +59,7 @@ public interface UserNotebookService {
 
 
 
-    PageInfo<NoteBookDto> userNoteBookList(NodesFindDto nodesFindDto, long userid);
+    PageInfo<NoteBookDto> userNoteBookList(AddressBookFindDto addressBookFindDto, long userid);
 
     UserNotebook addUserNoteBook(NoteBookDto noteBookDto, long userid);
 

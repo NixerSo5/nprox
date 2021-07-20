@@ -2,10 +2,7 @@ package com.nixer.nprox.service.auth.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.ning.http.util.UTF8UrlEncoder;
-import com.nixer.nprox.dao.AgentUserDao;
-import com.nixer.nprox.dao.AuthDao;
-import com.nixer.nprox.dao.SysLoginTypeDao;
-import com.nixer.nprox.dao.UserInfoDao;
+import com.nixer.nprox.dao.*;
 import com.nixer.nprox.entity.AgentUser;
 import com.nixer.nprox.entity.SysLoginType;
 import com.nixer.nprox.entity.common.Buser;
@@ -52,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Autowired
-    private  RedisUtil redisUtil;
+    private RedisUtil redisUtil;
 
     @Autowired
     private UserInfoDao userInfoDao;
@@ -63,6 +60,8 @@ public class AuthServiceImpl implements AuthService {
     @Autowired
     private SysLoginTypeDao sysLoginTypeDao;
 
+    @Autowired
+    private UserWalletDao userWalletDao;
 
 
     @Value("${jwt.tokenHead}")
@@ -81,11 +80,11 @@ public class AuthServiceImpl implements AuthService {
     public UserDetail register(UserDetail userDetail, int type) {//1是手机注册  2邮箱注册
         final String username = userDetail.getUsername();
         SysLoginType findSysLoginType = sysLoginTypeDao.findByLoginName(username);
-        if(findSysLoginType!=null) {
+        if (findSysLoginType != null) {
             throw new CustomException(ResultJson.failure(ResultCode.BAD_REQUEST, "用户已存在"));
         }
         //生成usertotal
-        SwarmUserTotal swarmUserTotal =new SwarmUserTotal();
+        SwarmUserTotal swarmUserTotal = new SwarmUserTotal();
 
         //userday 30tian
         //swarm_user_nodes_num 0
@@ -98,7 +97,7 @@ public class AuthServiceImpl implements AuthService {
         String useruid = UUID.randomUUID().toString();
         userDetail.setUsername(useruid);
         authMapper.insert(userDetail);
-        if(userDetail.getId()<=0){
+        if (userDetail.getId() <= 0) {
             throw new CustomException(ResultJson.failure(ResultCode.SERVER_ERROR, "保存用户错误"));
         }
 
@@ -108,7 +107,7 @@ public class AuthServiceImpl implements AuthService {
         sysLoginType.setUserid((int) userDetail.getId());
         sysLoginType.setSys_username(useruid);
         sysLoginTypeDao.insert(sysLoginType);
-        if(sysLoginType.getId()<=0){
+        if (sysLoginType.getId() <= 0) {
             throw new CustomException(ResultJson.failure(ResultCode.SERVER_ERROR, "保存用户错误"));
         }
 
@@ -127,35 +126,33 @@ public class AuthServiceImpl implements AuthService {
         authMapper.saveUserNodesNum(swarmUserNodesNum);
 
         UserInfo userInfo = new UserInfo();
-        userInfo.setUserid((int)userDetail.getId());
-        userInfo.setCashDai(0L);
-        if(type == 1 ){
-            userInfo.setPhone(userDetail.getUsername());
-        }else{
-            userInfo.setEmail(userDetail.getUsername());
+        userInfo.setUserid((int) userDetail.getId());
+        if (type == 1) {
+            userInfo.setPhone(username);
+        } else {
+            userInfo.setEmail(username);
         }
-        userInfo.setCashoutBzz(0L);
         userInfo.setLastip(userDetail.getLastip());
         userInfo.setImgurl("https://picsum.photos/80/80");
         userInfoDao.insert(userInfo);
         //TODO 提现charges  Agent认为是默认20%  User100%
 
         AgentUser agentUser = new AgentUser();
-        agentUser.setUserid((int)userDetail.getId());
+        agentUser.setUserid((int) userDetail.getId());
         agentUser.setCharges(100);
         agentUser.setAgentid(-1);
         agentUser.setLevelid(0);
         agentUserDao.insert(agentUser);
 
 
-        SimpleDateFormat sdf =new SimpleDateFormat("yyyy-MM-dd");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         List<SwarmUserDay> swarmUserDayList = new ArrayList<>();
         for (int i = 30; i >= 0; i--) {
             Calendar c = Calendar.getInstance();
             c.setTime(new Date());
             c.add(Calendar.DATE, -i);
             Date start = c.getTime();
-            String beforday= sdf.format(start);//前一天
+            String beforday = sdf.format(start);//前一天
             SwarmUserDay swarmUserDay = new SwarmUserDay();
             swarmUserDay.setUserid((int) userDetail.getId());
             swarmUserDay.setBzz(0L);
@@ -192,7 +189,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public void logout(String token) {
-        if(token!=null){
+        if (token != null) {
             token = token.substring(tokenHead.length());
             String userName = jwtTokenUtil.getUsernameFromToken(token);
             jwtTokenUtil.deleteToken(userName);
@@ -204,8 +201,8 @@ public class AuthServiceImpl implements AuthService {
         String token = oldToken.substring(tokenHead.length());
         String username = jwtTokenUtil.getUsernameFromToken(token);
         UserDetail userDetail = (UserDetail) userDetailsService.loadUserByUsername(username);
-        if (jwtTokenUtil.canTokenBeRefreshed(token, userDetail.getLastPasswordResetDate())){
-            token =  jwtTokenUtil.refreshToken(token);
+        if (jwtTokenUtil.canTokenBeRefreshed(token, userDetail.getLastPasswordResetDate())) {
+            token = jwtTokenUtil.refreshToken(token);
             jwtTokenUtil.putToken(username, token);
             return new ResponseUserToken(token, userDetail);
         }
@@ -221,31 +218,32 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public ResultJson sendVerificationCode(SendVerificationCodeDto codeDto) throws IOException {
         //查看是否有这个key 有就不能发送
-        String  value = redisUtil.get("SENDSMSLOCK:"+codeDto.getSend());
-        if(value==null){
-            String token =  randomCode();
-            String msgx = "【虎德】您的验证码"+token+"，该验证码5分钟内有效，请勿泄漏于他人！";
+        String value = redisUtil.get("SENDSMSLOCK:" + codeDto.getSend());
+        if (value == null) {
+            String token = randomCode();
+            String msgx = "【蜂蜜】您的验证码" + token + "，该验证码5分钟内有效，请勿泄漏于他人！";
             msgx = UTF8UrlEncoder.encodePath(msgx);
             String xurl = "http://api.sms654.com/smsUTF8.aspx?type=send&username=Hudex&" +
                     "password=E10ADC3949BA59ABBE56E057F20F883E&gwid=45e5195c" +
-                    "&mobile="+codeDto.getSend()+"&message="+msgx+"&rece=json";
+                    "&mobile=" + codeDto.getSend() + "&message=" + msgx + "&rece=json";
             String req = HttpUtil.doPost(xurl);
-            if(req!=null&&req!=""){
+            if (req != null && req != "") {
                 JSONObject jso = JSONObject.parseObject(req);
-                if(jso.getString("code").equals("0")){
-                    redisUtil.set("SENDSMSLOCK:"+codeDto.getSend(),"lock",60L);
-                    redisUtil.set("SENDSMS:"+codeDto.getSend(),token,5*60L);
+                if (jso.getString("code").equals("0")) {
+                    redisUtil.set("SENDSMSLOCK:" + codeDto.getSend(), "lock", 60L);
+                    redisUtil.set("SENDSMS:" + codeDto.getSend(), token, 5 * 60L);
                     return ResultJson.ok();
-                }if(jso.getString("code").equals("-33")){
-                    return ResultJson.failure(ResultCode.BAD_REQUEST,"手机号不存在");
-                }else{
+                }
+                if (jso.getString("code").equals("-33")) {
+                    return ResultJson.failure(ResultCode.BAD_REQUEST, "手机号不存在");
+                } else {
                     return ResultJson.failure(ResultCode.SERVER_ERROR);
                 }
-            }else{
+            } else {
                 return ResultJson.failure(ResultCode.SERVER_ERROR);
             }
-        }else{
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"操作太快!");
+        } else {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "操作太快!");
         }
     }
 
@@ -260,7 +258,7 @@ public class AuthServiceImpl implements AuthService {
 //        String req = HttpUtil.doPost(xurl);
 //        System.out.println(req);
 
-        UserDetail userDetail = new UserDetail(1l,"1",null,"1");
+        UserDetail userDetail = new UserDetail(1l, "1", null, "1");
         userDetail.setUsername("sss");
         String f = userDetail.getUsername();
         userDetail.setUsername("sssf");
@@ -272,10 +270,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public ResultJson sendEmailVerificationCode(SendVerificationCodeDto codeDto) {
-        String token =  randomCode();
+        String token = randomCode();
         try {
-            MailUtil.sendEmail(codeDto.getSend(),token);
-            redisUtil.set("SENDEMAIL:"+codeDto.getSend(),token,5*60L);
+            MailUtil.sendEmail(codeDto.getSend(), token);
+            redisUtil.set("SENDEMAIL:" + codeDto.getSend(), token, 5 * 60L);
             return ResultJson.ok();
         } catch (Exception e) {
             e.printStackTrace();
@@ -294,144 +292,176 @@ public class AuthServiceImpl implements AuthService {
         final String token = jwtTokenUtil.generateAccessToken(userDetail);
         //存储token
         jwtTokenUtil.putToken(userDetail.getUsername(), token);
-        superLoginDto.setId((int)userDetail.getId());
+        superLoginDto.setId((int) userDetail.getId());
         //更新登录ip和登录时间
         userInfoDao.updateLastIpAndTime(superLoginDto);
         return new ResponseUserToken(token, userDetail);
     }
 
     @Override
-    public ResultJson modifyPassword(ModifyPasswordDto modifyPasswordDto) {
-        Buser buser = authMapper.findBuserById(modifyPasswordDto.getUserid());
-        if(buser.getPhone()==null||buser.getPassword()==""){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"该账号未绑定手机号!");
+    public ResultJson modifyPassword(ModifyPasswordDto modifyPasswordDto, String ipaddress) {
+        if (UserUnlock(modifyPasswordDto.getUserid(), ipaddress)) {
+            Buser buser = authMapper.findBuserById(modifyPasswordDto.getUserid());
+//        if(buser.getPhone()==null||buser.getPassword()==""){
+//            return ResultJson.failure(ResultCode.BAD_REQUEST,"该账号未绑定手机号!");
+//        }
+            return modifyPsw(buser, modifyPasswordDto, 0);
+        } else {
+            return ResultJson.failure(ResultCode.SERVER_ERROR, "还未解锁无法操作");
         }
-         return  modifyPsw(buser,modifyPasswordDto,0);
     }
 
 
     @Transactional(rollbackFor = Exception.class)
-    public  ResultJson  modifyPsw(Buser buser, ModifyPasswordDto modifyPasswordDto, int type){
-        String vcode = redisUtil.get("SENDSMS:"+buser.getPhone());
+    public ResultJson modifyPsw(Buser buser, ModifyPasswordDto modifyPasswordDto, int type) {
+        //String vcode = redisUtil.get("SENDSMS:"+buser.getPhone());
         BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        if(type==0){
-            if(!encoder.matches(modifyPasswordDto.getOldPsw(),buser.getPassword())){
-                return ResultJson.failure(ResultCode.BAD_REQUEST,"密码错误!");
+        if (type == 0) {
+            if (!encoder.matches(modifyPasswordDto.getOldPsw(), buser.getPassword())) {
+                return ResultJson.failure(ResultCode.BAD_REQUEST, "密码错误!");
             }
         }
-        if(vcode.equals(modifyPasswordDto.getSmscode())){
-            //更新
-            modifyPasswordDto.setNewPsw(encoder.encode(modifyPasswordDto.getNewPsw()));
-            authMapper.updatePassword(modifyPasswordDto);
-            this.logout(modifyPasswordDto.getToken());
-            return ResultJson.ok();
-        }else{
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"验证码错误!");
-        }
+        //if(vcode.equals(modifyPasswordDto.getSmscode())){
+        //更新
+        modifyPasswordDto.setNewPsw(encoder.encode(modifyPasswordDto.getNewPsw()));
+        authMapper.updatePassword(modifyPasswordDto);
+        this.logout(modifyPasswordDto.getToken());
+        return ResultJson.ok();
+//        }else{
+//            return ResultJson.failure(ResultCode.BAD_REQUEST,"验证码错误!");
+//        }
     }
 
     @Override
-    public ResultJson findPassword(ModifyPasswordDtoExt modifyPasswordDto) {
-        UserDetail userDetail =   authMapper.findByUsername(modifyPasswordDto.getUsername());
-        if(userDetail==null){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"用户不存在");
+    public ResultJson findPassword(FindPassWordDto findPassWordDto, String ipaddress) {
+        SysLoginType sysLoginType = sysLoginTypeDao.findByLoginName(findPassWordDto.getUsername());
+        if (sysLoginType == null) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "用户不存在");
         }
-        Buser buser = authMapper.findBuserById(userDetail.getId());
-        if(buser.getPhone()==null||!buser.getPhone().equals(modifyPasswordDto.getPhonenum())){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"手机号错误");
+        UserDetail userDetail = authMapper.findById(sysLoginType.getUserid());
+        UserInfo userInfo = userInfoDao.findByUserid(sysLoginType.getUserid());
+        if (userDetail == null || userInfo == null) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "用户不存在");
         }
-        return  modifyPsw(buser,modifyPasswordDto, 1);
+
+        String vcode = "";
+        if (findPassWordDto.getFindtype() == 1) {
+            vcode = redisUtil.get("SENDSMS:" + userInfo.getPhone());
+        } else {
+            vcode = redisUtil.get("SENDEMAIL:" + userInfo.getEmail());
+        }
+        if (!vcode.equals(findPassWordDto.getVerifycode())) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码错误");
+        }
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        ModifyPasswordDto modifyPasswordDto = new ModifyPasswordDto();
+        modifyPasswordDto.setUserid(sysLoginType.getUserid().longValue());
+        modifyPasswordDto.setNewPsw(encoder.encode(findPassWordDto.getNew_password()));
+        authMapper.updatePassword(modifyPasswordDto);
+        this.logout(modifyPasswordDto.getToken());
+        return ResultJson.ok();
+
     }
 
     @Override
     public ResultJson userVerify(UserDetail userDetail, UserVerifyDto singlePramDto, String ipaddress) throws IOException {
-          long userid = userDetail.getId();
-          UserInfo userInfo= userInfoDao.findByUserid(userDetail.getId());
-          if(userInfo==null){
-              return ResultJson.failure(ResultCode.BAD_REQUEST,"用户不存在!");
-          }
-          if((singlePramDto.getUnlockType().equals("0")&&StringUtils.isEmpty(userInfo.getPhone()))||(singlePramDto.getUnlockType().equals(
-                  "1")&&StringUtils.isEmpty(userInfo.getEmail()))){
-              return ResultJson.failure(ResultCode.BAD_REQUEST,"验证未绑定!");
-          }
+        long userid = userDetail.getId();
+        UserInfo userInfo = userInfoDao.findByUserid(userDetail.getId());
+        if (userInfo == null) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "用户不存在!");
+        }
+        if ((singlePramDto.getUnlockType().equals("0") && StringUtils.isEmpty(userInfo.getPhone())) || (singlePramDto.getUnlockType().equals(
+                "1") && StringUtils.isEmpty(userInfo.getEmail()))) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "验证未绑定!");
+        }
         String value = "";
-         if(singlePramDto.getUnlockType().equals("0")){
-            value = redisUtil.get("SENDSMS:" +userInfo.getPhone());
-           }else{
-            value = redisUtil.get("SENDEMAIL:" +userInfo.getEmail());
-          }
-          if(singlePramDto.getVrifyCode().equals(value)){
-              redisUtil.set("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress,"unlock",60L*5);
-              return ResultJson.ok();
-          }
-          return ResultJson.failure(ResultCode.BAD_REQUEST,"验证码错误无法解锁");
+        if (singlePramDto.getUnlockType().equals("0")) {
+            value = redisUtil.get("SENDSMS:" + userInfo.getPhone());
+        } else {
+            value = redisUtil.get("SENDEMAIL:" + userInfo.getEmail());
+        }
+        if (singlePramDto.getVrifyCode().equals(value)) {
+            redisUtil.set("USERUNLOCKVERIFY:USERID:" + userid + "_" + ipaddress, "unlock", 60L * 5);
+            return ResultJson.ok();
+        }
+        return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码错误无法解锁");
     }
 
     @Override
     public ResultJson userChangeBind(UserDetail userDetail, ChangeBindDto changeBindDto, String ipaddress) {
-       if(UserUnlock(userDetail.getId(),ipaddress)){
-           UserInfo userInfo = userInfoDao.findByUserid(userDetail.getId());
-           SysLoginType sysLoginType = null;
-           if(userInfo==null){
-            return   ResultJson.failure(ResultCode.SERVER_ERROR,"用户存在吗?");
-           }
-           String value = "";
-           long userid = userDetail.getId();
-           if(changeBindDto.getBindtype()==0){
-               sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid,1);
-               value = redisUtil.get("SENDSMS:" +changeBindDto.getBind());
-               userInfo.setPhone(changeBindDto.getBind());
-           }else{
-               sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid,2);
-               value = redisUtil.get("SENDEMAIL:" +changeBindDto.getBind());
-               userInfo.setEmail(changeBindDto.getBind());
-           }
-           if(sysLoginType==null){
-               return   ResultJson.failure(ResultCode.SERVER_ERROR,"还未绑定相关");
-           }
-           if(value.equals(changeBindDto.getBindcode())){
-               sysLoginType.setLogin_name(changeBindDto.getBind());
-               sysLoginTypeDao.update(sysLoginType);
-               userInfoDao.update(userInfo);
-               redisUtil.remove("USERUNLOCKVERIFY:USERID:"+userDetail.getId()+"_"+ipaddress);
-               return ResultJson.ok();
-           }else {
-               return ResultJson.failure(ResultCode.BAD_REQUEST,"验证码错误");
-           }
-       }
-       return ResultJson.failure(ResultCode.BAD_REQUEST,"还未解锁无法进行操作");
+        if (UserUnlock(userDetail.getId(), ipaddress)) {
+            UserInfo userInfo = userInfoDao.findByUserid(userDetail.getId());
+
+            if (userInfo == null) {
+                return ResultJson.failure(ResultCode.SERVER_ERROR, "用户存在吗?");
+            }
+            String value = "";
+            long userid = userDetail.getId();
+            SysLoginType findsysLoginType = sysLoginTypeDao.findByLoginName(changeBindDto.getBind());
+            if (findsysLoginType != null) {
+                return ResultJson.failure(ResultCode.SERVER_ERROR, "该账号已被其他账号绑定");
+            }
+            SysLoginType sysLoginType = null;
+            if (changeBindDto.getBindtype() == 0) {
+                sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid, 1);
+                value = redisUtil.get("SENDSMS:" + changeBindDto.getBind());
+                userInfo.setPhone(changeBindDto.getBind());
+            } else {
+                sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid, 2);
+                value = redisUtil.get("SENDEMAIL:" + changeBindDto.getBind());
+                userInfo.setEmail(changeBindDto.getBind());
+            }
+            if (sysLoginType == null) {
+                return ResultJson.failure(ResultCode.SERVER_ERROR, "还未绑定相关");
+            }
+            if (value.equals(changeBindDto.getBindcode())) {
+                sysLoginType.setLogin_name(changeBindDto.getBind());
+                sysLoginTypeDao.updateBind(sysLoginType);
+                userInfoDao.update(userInfo);
+                redisUtil.remove("USERUNLOCKVERIFY:USERID:" + userDetail.getId() + "_" + ipaddress);
+                return ResultJson.ok();
+            } else {
+                return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码错误");
+            }
+        }
+        return ResultJson.failure(ResultCode.BAD_REQUEST, "还未解锁无法进行操作");
     }
 
     @Override
     public ResultJson beforeUserVerify(UserDetail userDetail, SinglePramDto singlePramDto) throws IOException {
         UserInfo userInfo = userInfoDao.findByUserid(userDetail.getId());
-        if(userInfo==null){
-           return ResultJson.failure(ResultCode.SERVER_ERROR,"用户不存在");
+        if (userInfo == null) {
+            return ResultJson.failure(ResultCode.SERVER_ERROR, "用户不存在");
         }
-        SendVerificationCodeDto sendVerificationCodeDto =new SendVerificationCodeDto();
-        if(singlePramDto.getDoid().equals("0")&&StringUtils.isEmpty(userInfo.getPhone())){
-           return ResultJson.failure(ResultCode.SERVER_ERROR,"用户没有绑定手机");
+        SendVerificationCodeDto sendVerificationCodeDto = new SendVerificationCodeDto();
+        if (singlePramDto.getDoid().equals("0") && StringUtils.isEmpty(userInfo.getPhone())) {
+            return ResultJson.failure(ResultCode.SERVER_ERROR, "用户没有绑定手机");
         }
-        if(singlePramDto.getDoid().equals("1")&&StringUtils.isEmpty(userInfo.getEmail())){
-            return ResultJson.failure(ResultCode.SERVER_ERROR,"用户没有绑定邮箱");
+        if (singlePramDto.getDoid().equals("1") && StringUtils.isEmpty(userInfo.getEmail())) {
+            return ResultJson.failure(ResultCode.SERVER_ERROR, "用户没有绑定邮箱");
         }
-        if(singlePramDto.getDoid().equals("0")){
-              sendVerificationCodeDto.setSend(userInfo.getPhone());
-              sendVerificationCode(sendVerificationCodeDto);
-              return ResultJson.ok();
-        }else if(singlePramDto.getDoid().equals("1")){
-              sendVerificationCodeDto.setSend(userInfo.getEmail());
-              sendEmailVerificationCode(sendVerificationCodeDto);
-              return ResultJson.ok();
-        }else{
-            return ResultJson.failure(ResultCode.SERVER_ERROR,"参数错误");
+        if (singlePramDto.getDoid().equals("0")) {
+            sendVerificationCodeDto.setSend(userInfo.getPhone());
+            sendVerificationCode(sendVerificationCodeDto);
+            return ResultJson.ok();
+        } else if (singlePramDto.getDoid().equals("1")) {
+            sendVerificationCodeDto.setSend(userInfo.getEmail());
+            sendEmailVerificationCode(sendVerificationCodeDto);
+            return ResultJson.ok();
+        } else {
+            return ResultJson.failure(ResultCode.SERVER_ERROR, "参数错误");
         }
     }
 
+    @Override
+    public UserDetail getSysUserByUserId(long id) {
+        return authMapper.findById(id);
+    }
 
-    public Boolean UserUnlock(long userid,String ipaddress){
-        String key = redisUtil.get("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress);
-        if(StringUtils.isEmpty(key)){
+
+    public Boolean UserUnlock(long userid, String ipaddress) {
+        String key = redisUtil.get("USERUNLOCKVERIFY:USERID:" + userid + "_" + ipaddress);
+        if (StringUtils.isEmpty(key)) {
             return false;
         }
         return true;
@@ -446,7 +476,6 @@ public class AuthServiceImpl implements AuthService {
             throw new CustomException(ResultJson.failure(ResultCode.LOGIN_ERROR, e.getMessage()));
         }
     }
-
 
 
     public static String randomCode() {

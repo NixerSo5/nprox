@@ -13,6 +13,7 @@
         <result property="withdrawAddress" column="withdraw_address" jdbcType="VARCHAR"/>
         <result property="remarks" column="remarks" jdbcType="VARCHAR"/>
         <result property="status" column="status" jdbcType="INTEGER"/>
+        <result property="tokenid" column="tokenid" jdbcType="INTEGER"/>
     </resultMap>
 
     <!--查询单个-->
@@ -71,7 +72,7 @@
             </if>
         </where>
     </select>
-    <select id="userOrderList" resultType="com.nixer.nprox.entity.swarm.UserOrder">
+    <select id="userOrderList" resultMap="UserOrderMap">
         select  * from  user_order  where  userid =#{userid}
         <if test="state != -1">
             AND `status` = #{state}
@@ -81,9 +82,9 @@
     <!--新增所有列-->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">
         insert into nprox.user_order(userid, service_type, date, currency_type, quantity, service_charges,
-                                     withdraw_address, remarks, status)
+                                     withdraw_address, remarks, status,tokenid)
         values (#{userid}, #{serviceType}, now(), #{currencyType}, #{quantity}, #{serviceCharges}, #{withdrawAddress},
-                #{remarks}, #{status})
+                #{remarks}, #{status},#{tokenid})
     </insert>
 
     <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">

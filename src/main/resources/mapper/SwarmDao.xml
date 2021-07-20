@@ -37,22 +37,23 @@
         where update_date = #{date}
     </select>
     <select id="userPoolStateLine" resultType="com.nixer.nprox.entity.swarm.UserSwarmLine">
-        SELECT SUD.date as date,
+        SELECT  * FROM (
+                           SELECT SUD.date as date,
 	SUD.bzz as user_bzz,
 	SUD.cash_out as user_cash_out,
 	SUD.node_num as user_nodes_num,
 	IFNULL(SD.cashout ,0 )as pool_cashout,
 	IFNULL(SD.bzzout ,0)as pool_bzz,
 	IFNULL(SD.nodes_num,0) as pool_nodes_num
-        FROM
-            swarm_user_day SUD
-            LEFT  JOIN swarm_day SD
-        ON SUD.date = SD.update_date
-        WHERE
-            SUD.userid = #{userid}
-        ORDER BY
-            SUD.date ASC
-            LIMIT 1, 30
+                           FROM
+                               swarm_user_day SUD
+                               LEFT  JOIN swarm_day SD
+                           ON SUD.date = SD.update_date
+                           WHERE
+                               SUD.userid = #{userid}
+                           ORDER BY
+                               SUD.date desc
+                               LIMIT 1, 30) as FDATA ORDER BY date asc
     </select>
     <select id="useNodesList" resultType="com.nixer.nprox.entity.swarm.SwarmNodes">
         SELECT
@@ -78,6 +79,15 @@
     </select>
     <select id="getSysConfigOutCash" resultType="com.nixer.nprox.entity.common.SysConfig">
         select  * from  sys_config where  id = 2
+    </select>
+    <select id="tokensInfo" resultType="com.nixer.nprox.entity.SwarmTokenTotal"
+            parameterType="com.nixer.nprox.entity.swarm.dto.WalletInfoDto">
+        SELECT
+            STT.* ,gcd
+        FROM
+            swarm_token_total STT
+                LEFT JOIN swarm_tokens ST ON ST.id = STT.tokenid
+        where tokenid = #{tokenid}
     </select>
 
 

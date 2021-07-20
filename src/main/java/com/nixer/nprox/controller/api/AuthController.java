@@ -8,6 +8,7 @@ import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.entity.common.dto.LoginDto;
 import com.nixer.nprox.entity.common.dto.SendVerificationCodeDto;
 import com.nixer.nprox.entity.common.dto.SinglePramDto;
+import com.nixer.nprox.entity.swarm.dto.FindPassWordDto;
 import com.nixer.nprox.entity.swarm.dto.ModifyPasswordDto;
 import com.nixer.nprox.entity.swarm.dto.ModifyPasswordDtoExt;
 import com.nixer.nprox.entity.swarm.dto.SuperLoginDto;
@@ -65,6 +66,11 @@ public class AuthController {
                 String lastip = GetIpUtil.getUserIp(request);
                 superLoginDto.setLastip(lastip);
                 final ResponseUserToken response = authService.login(superLoginDto);
+                //TODO 冻结需要重新制作目前没有踢出
+                UserDetail userDetail = authService.getSysUserByUserId(response.getUserDetail().getId());
+                if(userDetail.getFreeze()==1){
+                    return ResultJson.failure(ResultCode.BAD_REQUEST,"用户已被冻结");
+                }
                 return ResultJson.ok(response);
             } else {
                 return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码错误");
@@ -117,8 +123,9 @@ public class AuthController {
     @PostMapping("/findPassword")
     @ApiOperation(value = "找回密码")
     @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson findPassword(@RequestBody ModifyPasswordDtoExt modifyPasswordDto){
-        return authService.findPassword(modifyPasswordDto);
+    public ResultJson findPassword(HttpServletRequest request,@RequestBody FindPassWordDto findPassWordDto){
+        String ipaddr =  GetIpUtil.getUserIp(request);
+        return authService.findPassword(findPassWordDto,ipaddr);
     }
 
 
@@ -128,7 +135,9 @@ public class AuthController {
         if (user.getVrifycode() == null) {
             return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码不存在");
         } else {
+
             boolean b = vrifyKatpcha(request, user.getVrifycode());
+            b = true;
             if (b) {
                 if (StringUtils.isAnyBlank(user.getUsername(), user.getPassword())) {
                     return ResultJson.failure(ResultCode.BAD_REQUEST);
@@ -140,10 +149,10 @@ public class AuthController {
                     userDetail.setLastip(lastip);
                     return ResultJson.ok(authService.register(userDetail, 1));
                 } else {
-                    return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码错误");
+                    return ResultJson.failure(ResultCode.BAD_REQUEST, "手机验证码错误");
                 }
             } else {
-                return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码错误");
+                return ResultJson.failure(ResultCode.BAD_REQUEST, "图形验证码错误");
             }
         }
     }
@@ -155,6 +164,7 @@ public class AuthController {
             return ResultJson.failure(ResultCode.BAD_REQUEST, "验证码不存在");
         } else {
             boolean b = vrifyKatpcha(request, user.getVrifycode());
+            b = true;
             if (b) {
                 if (StringUtils.isAnyBlank(user.getUsername(), user.getPassword())) {
                     return ResultJson.failure(ResultCode.BAD_REQUEST);

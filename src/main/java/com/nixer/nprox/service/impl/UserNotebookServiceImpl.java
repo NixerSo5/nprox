@@ -86,9 +86,9 @@ public class UserNotebookServiceImpl implements UserNotebookService {
     }
 
     @Override
-    public PageInfo<NoteBookDto> userNoteBookList(NodesFindDto nodesFindDto, long userid) {
-        PageHelper.startPage(nodesFindDto.getIndex(), nodesFindDto.getSize());
-        List<NoteBookDto> lists = userNotebookDao.userNoteBookList(userid,nodesFindDto.getState());
+    public PageInfo<NoteBookDto> userNoteBookList(AddressBookFindDto addressBookFindDto, long userid) {
+        PageHelper.startPage(addressBookFindDto.getIndex(), addressBookFindDto.getSize());
+        List<NoteBookDto> lists = userNotebookDao.userNoteBookList(userid,addressBookFindDto.getTokenid());
         PageInfo<NoteBookDto> pageInfo = new PageInfo<NoteBookDto>(lists);
         return pageInfo;
     }
@@ -110,17 +110,6 @@ public class UserNotebookServiceImpl implements UserNotebookService {
     @Override
     public ResultJson<UserAccount> userAccount(long userid) {
         UserAccount userAccount = this.userNotebookDao.userAccount(userid);
-        if(userAccount.getCbzz()==null){
-            userAccount.setCbzz(new BigDecimal(0));
-        }
-        if(userAccount.getCashout_bzz() ==null){
-            userAccount.setCashout_bzz(new BigDecimal(0));
-        }
-        BigDecimal userCanCashOut = userAccount.getBzz().subtract(userAccount.getCashout_bzz()).multiply(GCD);
-        userAccount.setCbzz(userCanCashOut);
-        userAccount.setBzz(userAccount.getBzz().multiply(GCD));
-        userAccount.setCash_dai(userAccount.getCash_dai().multiply(GCD));
-        userAccount.setCashout_bzz(userAccount.getCashout_bzz().multiply(GCD));
         if(userAccount!=null){
             return ResultJson.ok(userAccount);
         }else{

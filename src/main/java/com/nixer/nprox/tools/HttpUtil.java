@@ -7,21 +7,33 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.CookieStore;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.protocol.ClientContext;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.cookie.BasicClientCookie;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContextBuilder;
 import org.apache.http.util.EntityUtils;
 
+import javax.net.ssl.SSLContext;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -55,17 +67,41 @@ public class HttpUtil {
     public static String doPost(String url){
         return doOne(url,"POST",null,false);
     }
-    public static String doOne(String url,String methed,Object data,Boolean isproxy) {
+    public static String doOne(String url,String methed,Object data,Boolean isproxy)  {
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         HttpHost proxy = new HttpHost("127.0.0.1", 7890);
+
         //把代理设置到请求配置
         RequestConfig defaultRequestConfig = RequestConfig.custom().setConnectTimeout(5000).setConnectionRequestTimeout(2000).build();
         if(isproxy){
             defaultRequestConfig = RequestConfig.custom().setProxy(proxy).build();
         }
+        CloseableHttpClient httpsClient = null;
+        SSLContext sslContext =
+                null;
+        try {
+            sslContext = new SSLContextBuilder().loadTrustMaterial(null, (certificate, authType) -> true).build();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        httpsClient =
+               HttpClients.custom().setSSLContext(sslContext).setSSLHostnameVerifier(new NoopHostnameVerifier()).build();
+
         CloseableHttpClient httpclient = HttpClients.custom().setDefaultRequestConfig(defaultRequestConfig).build();
         // 创建Get请求
         HttpGet httpGet = new HttpGet(url);
+        CookieStore cookieStore = new BasicCookieStore();
+
+        BasicClientCookie cookie = new BasicClientCookie("user-has-accepted-cookies", "true");
+        //放入cookiestore
+        cookieStore.addCookie(cookie);
+        // Create local HTTP context
+        HttpContext localContext = new BasicHttpContext();
+        // Bind custom cookie store to the local context
+        localContext.setAttribute(ClientContext.COOKIE_STORE, cookieStore);
+
+
         // 响应模型
         CloseableHttpResponse response = null;
         try {
@@ -81,12 +117,17 @@ public class HttpUtil {
                 response = httpclient.execute(httpPost);
                 System.out.println("==========================httpGetsend=================="+url+methed+data+isproxy);
             }else{
+                httpGet.setHeader("Content-Type", "application/json");
+                httpGet.setHeader("User-Agent",
+                        "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+
                 System.out.println("==========================httpGetsend=================="+url+methed+data+isproxy);
-                response = httpclient.execute(httpGet);
+                response = httpclient.execute(httpGet,localContext);
             }
 
             // 从响应模型中获取响应实体
             HttpEntity responseEntity = response.getEntity();
+
             System.out.println("响应状态为:" + response.getStatusLine());
             if (responseEntity != null) {
                 System.out.println("响应内容长度为:" + responseEntity.getContentLength());
@@ -349,10 +390,18 @@ public class HttpUtil {
             // 打开和URL之间的连接
             URLConnection connection = realUrl.openConnection();
             // 设置通用的请求属性
-            connection.setRequestProperty("accept", "*/*");
-            connection.setRequestProperty("connection", "Keep-Alive");
-            connection.setRequestProperty("user-agent",
-                    "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1;SV1)");
+            connection.setRequestProperty("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9," +
+                    "image/webp,*/*;q=0.8");
+            connection.setRequestProperty("Accept-Language","zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;" +
+                    "q=0.2");
+            connection.setRequestProperty("Cache-Control", "max-age=0");
+            connection.setRequestProperty("Accept-Encoding", "gzip, deflate, br");
+            connection.setRequestProperty("Referer", "https://api2.chiaexplorer.com");
+            connection.setRequestProperty("Connection", "Keep-Alive");
+            connection.setRequestProperty("User-Agent",
+                    "PostmanRuntime/7.28.1");
+            connection.setRequestProperty("User-Agent",
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0");
             // 建立实际的连接
             connection.connect();
             // 获取所有响应头字段

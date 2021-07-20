@@ -59,13 +59,15 @@ public interface AuthService {
 
     ResponseUserToken login(SuperLoginDto superLoginDto);
 
-    ResultJson modifyPassword(ModifyPasswordDto modifyPasswordDto);
+    ResultJson modifyPassword(ModifyPasswordDto modifyPasswordDto,String ipaddress);
 
-    ResultJson findPassword(ModifyPasswordDtoExt modifyPasswordDto);
+    ResultJson findPassword(FindPassWordDto modifyPasswordDto, String ipaddress);
 
     ResultJson userVerify(UserDetail userid, UserVerifyDto userVerifyDto, String ipaddress) throws IOException;
 
     ResultJson userChangeBind(UserDetail userDetail, ChangeBindDto changeBindDto, String ipaddress);
 
     ResultJson beforeUserVerify(UserDetail userDetail, SinglePramDto singlePramDto) throws IOException;
+
+    UserDetail getSysUserByUserId(long id);
 }

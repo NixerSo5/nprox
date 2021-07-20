@@ -44,18 +44,6 @@ public class UserAccount{
     private BigDecimal  bzz;
 
 
-    @ApiModelProperty(value="cbzz 可提现金额")
-    private BigDecimal cbzz;
-
-    @ApiModelProperty(value="cashout_bzz 已提现金额")
-    private BigDecimal cashout_bzz;
-
-    @ApiModelProperty(value="dai余额")
-    private BigDecimal       cash_dai;
-
-
-
-
 
     private String lastip;
 
@@ -197,27 +185,4 @@ public class UserAccount{
         this.bzz = bzz;
     }
 
-    public BigDecimal getCbzz() {
-        return cbzz;
-    }
-
-    public void setCbzz(BigDecimal cbzz) {
-        this.cbzz = cbzz;
-    }
-
-    public BigDecimal getCashout_bzz() {
-        return cashout_bzz;
-    }
-
-    public void setCashout_bzz(BigDecimal cashout_bzz) {
-        this.cashout_bzz = cashout_bzz;
-    }
-
-    public BigDecimal getCash_dai() {
-        return cash_dai;
-    }
-
-    public void setCash_dai(BigDecimal cash_dai) {
-        this.cash_dai = cash_dai;
-    }
 }

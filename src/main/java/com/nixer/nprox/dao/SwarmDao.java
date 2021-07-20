@@ -1,8 +1,10 @@
 package com.nixer.nprox.dao;
 
 
+import com.nixer.nprox.entity.SwarmTokenTotal;
 import com.nixer.nprox.entity.common.SysConfig;
 import com.nixer.nprox.entity.swarm.*;
+import com.nixer.nprox.entity.swarm.dto.WalletInfoDto;
 import com.nixer.nprox.entity.swarm.pool.CashOutConfig;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -38,4 +40,5 @@ public interface SwarmDao {
 
     SysConfig getSysConfigOutCash();
 
+    SwarmTokenTotal tokensInfo(WalletInfoDto walletInfoDto);
 }

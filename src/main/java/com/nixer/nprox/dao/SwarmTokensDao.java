@@ -1,19 +1,20 @@
 package com.nixer.nprox.dao;
 
-import com.nixer.nprox.entity.SysLoginType;
+import com.nixer.nprox.entity.SwarmTokens;
 import org.apache.ibatis.annotations.Param;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 /**
- * (SysLoginType)表数据库访问层
+ * (SwarmTokens)表数据库访问层
  *
  * @author makejava
- * @since 2021-07-01 18:39:20
+ * @since 2021-07-06 11:55:54
  */
 @Repository
-public interface SysLoginTypeDao {
+public interface SwarmTokensDao {
 
     /**
      * 通过ID查询单条数据
@@ -21,7 +22,7 @@ public interface SysLoginTypeDao {
      * @param id 主键
      * @return 实例对象
      */
-    SysLoginType queryById(Integer id);
+    SwarmTokens queryById(Integer id);
 
     /**
      * 查询指定行数据
@@ -30,48 +31,48 @@ public interface SysLoginTypeDao {
      * @param limit  查询条数
      * @return 对象列表
      */
-    List<SysLoginType> queryAllByLimit(@Param("offset") int offset, @Param("limit") int limit);
+    List<SwarmTokens> queryAllByLimit(@Param("offset") int offset, @Param("limit") int limit);
 
 
     /**
      * 通过实体作为筛选条件查询
      *
-     * @param sysLoginType 实例对象
+     * @param swarmTokens 实例对象
      * @return 对象列表
      */
-    List<SysLoginType> queryAll(SysLoginType sysLoginType);
+    List<SwarmTokens> queryAll(SwarmTokens swarmTokens);
 
     /**
      * 新增数据
      *
-     * @param sysLoginType 实例对象
+     * @param swarmTokens 实例对象
      * @return 影响行数
      */
-    int insert(SysLoginType sysLoginType);
+    int insert(SwarmTokens swarmTokens);
 
     /**
      * 批量新增数据（MyBatis原生foreach方法）
      *
-     * @param entities List<SysLoginType> 实例对象列表
+     * @param entities List<SwarmTokens> 实例对象列表
      * @return 影响行数
      */
-    int insertBatch(@Param("entities") List<SysLoginType> entities);
+    int insertBatch(@Param("entities") List<SwarmTokens> entities);
 
     /**
      * 批量新增或按主键更新数据（MyBatis原生foreach方法）
      *
-     * @param entities List<SysLoginType> 实例对象列表
+     * @param entities List<SwarmTokens> 实例对象列表
      * @return 影响行数
      */
-    int insertOrUpdateBatch(@Param("entities") List<SysLoginType> entities);
+    int insertOrUpdateBatch(@Param("entities") List<SwarmTokens> entities);
 
     /**
      * 修改数据
      *
-     * @param sysLoginType 实例对象
+     * @param swarmTokens 实例对象
      * @return 影响行数
      */
-    int update(SysLoginType sysLoginType);
+    int update(SwarmTokens swarmTokens);
 
     /**
      * 通过主键删除数据
@@ -81,12 +82,6 @@ public interface SysLoginTypeDao {
      */
     int deleteById(Integer id);
 
-     SysLoginType findByLoginName(String username);
-
-    SysLoginType findByUserId(long userid);
-
-    SysLoginType findByUserIdAndLoginType(@Param("userid")long userid,@Param("type") int type);
-
-    void updateBind(SysLoginType sysLoginType);
+    List<SwarmTokens> tokensList(long userid, Integer state);
 }
 

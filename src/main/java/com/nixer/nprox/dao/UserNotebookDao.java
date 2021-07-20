@@ -83,7 +83,7 @@ public interface UserNotebookDao {
      */
     int deleteById(Integer id);
 
-    List<NoteBookDto> userNoteBookList(@Param("userid")long userid,@Param("state") Integer state);
+    List<NoteBookDto> userNoteBookList(@Param("userid")long userid,@Param("tokenid") Integer tokenid);
 
     UserAccount userAccount(long userid);
 }

@@ -4,7 +4,10 @@ package com.nixer.nprox.controller.swarm;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.Page;
 import com.github.pagehelper.PageInfo;
+import com.nixer.nprox.entity.SwarmTokenTotal;
+import com.nixer.nprox.entity.SwarmTokens;
 import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.entity.common.dto.PageFindDto;
 import com.nixer.nprox.entity.swarm.SwarmDay;
 import com.nixer.nprox.entity.swarm.SwarmNodes;
 import com.nixer.nprox.entity.swarm.SwarmUserTotal;
@@ -91,6 +94,42 @@ public class SwarmController {
         PageInfo<SwarmNodes> swarmNodesPageInfo = swarmService.useNodesList(nodesFindDto,userid);
         return ResultJson.ok(swarmNodesPageInfo);
     }
+
+
+
+
+    @PreAuthorize("hasAnyRole('USER','AGENT')") // 只能user角色才能访问该方法
+    @PostMapping("/tokensList")
+    @ApiOperation(value = "token种类列表")
+    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+    public ResultJson<PageInfo<SwarmTokens>> tokensList(HttpServletRequest request, @RequestBody PageFindDto pageFindDto){
+        String token = request.getHeader(tokenHeader);
+        if (token == null) {
+            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+        }
+        UserDetail userDetail = authService.getUserByToken(token);
+        long userid = userDetail.getId();//userid
+        PageInfo<SwarmTokens> swarmNodesPageInfo = swarmService.tokensList(pageFindDto,userid);
+        return ResultJson.ok(swarmNodesPageInfo);
+    }
+
+
+
+    @PreAuthorize("hasAnyRole('USER','AGENT')") // 只能user角色才能访问该方法
+    @PostMapping("/tokensInfo")
+    @ApiOperation(value = "token状态")
+    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+    public ResultJson<SwarmTokenTotal> tokensInfo(HttpServletRequest request, @RequestBody WalletInfoDto walletInfoDto){
+        String token = request.getHeader(tokenHeader);
+        if (token == null) {
+            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+        }
+        UserDetail userDetail = authService.getUserByToken(token);
+        SwarmTokenTotal swarmNodesPageInfo = swarmService.tokensInfo(walletInfoDto);
+        return ResultJson.ok(swarmNodesPageInfo);
+    }
+
+
 //    //新增节点
 //    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
 //    @PostMapping("/userNodesAdd")

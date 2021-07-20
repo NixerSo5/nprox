@@ -12,6 +12,7 @@ import com.nixer.nprox.service.AgentService;
 import com.nixer.nprox.service.UserNotebookService;
 import com.nixer.nprox.service.UserOrderService;
 import com.nixer.nprox.service.auth.AuthService;
+import com.nixer.nprox.service.swarm.SwarmService;
 import com.nixer.nprox.tools.GetIpUtil;
 import com.nixer.nprox.tools.ResultCode;
 import com.nixer.nprox.tools.ResultJson;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * (UserNotebook)表控制层
@@ -55,6 +57,9 @@ public class UserControler {
     @Autowired
     private AgentService agentService;
 
+    @Autowired
+    private SwarmService swarmService;
+
 
 
     @PreAuthorize("hasAnyRole('USER','AGENT','ADMIN')")
@@ -73,14 +78,15 @@ public class UserControler {
     @PostMapping("/userNoteBookList")
     @ApiOperation(value = "用户转账地址簿")
     @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson<PageInfo<NoteBookDto>> userNoteBookList(HttpServletRequest request, @RequestBody NodesFindDto nodesFindDto){
+    public ResultJson<PageInfo<NoteBookDto>> userNoteBookList(HttpServletRequest request,
+                                                              @RequestBody AddressBookFindDto addressBookFindDto){
         String token = request.getHeader(tokenHeader);
         if (token == null) {
             return ResultJson.failure(ResultCode.UNAUTHORIZED);
         }
         UserDetail userDetail = authService.getUserByToken(token);
         long userid = userDetail.getId();//userid
-        PageInfo<NoteBookDto> swarmNodesPageInfo = userNotebookService.userNoteBookList(nodesFindDto,userid);
+        PageInfo<NoteBookDto> swarmNodesPageInfo = userNotebookService.userNoteBookList(addressBookFindDto,userid);
         return ResultJson.ok(swarmNodesPageInfo);
     }
 
@@ -97,7 +103,8 @@ public class UserControler {
         long userid = userDetail.getId();//userid
         modifyPasswordDto.setUserid(userid);
         modifyPasswordDto.setToken(token);
-        return authService.modifyPassword(modifyPasswordDto);
+        String ipaddr =  GetIpUtil.getUserIp(request);
+        return authService.modifyPassword(modifyPasswordDto,ipaddr);
     }
 
     @PreAuthorize("hasAnyRole('USER','AGENT')") // 只能user角色才能访问该方法
@@ -292,6 +299,34 @@ public class UserControler {
         UserDetail userDetail = authService.getUserByToken(token);
         String ipaddress  = GetIpUtil.getUserIp(request);
         return  authService.userChangeBind(userDetail,changeBindDto,ipaddress);
+    }
+
+
+    @PreAuthorize("hasAnyRole('USER','AGENT')")
+    @PostMapping("/userWallet")
+    @ApiOperation(value = "用户钱包")
+    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+    public ResultJson<List<UserWalletDto>> userWallet(HttpServletRequest request) throws IOException {
+        String token = request.getHeader(tokenHeader);
+        if (token == null) {
+            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+        }
+        UserDetail userDetail = authService.getUserByToken(token);
+        return  swarmService.userWallet(userDetail);
+    }
+
+
+    @PreAuthorize("hasAnyRole('USER','AGENT')")
+    @PostMapping("/activeWallet")
+    @ApiOperation(value = "激活用户钱包")
+    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+    public ResultJson activeWallet(HttpServletRequest request,@RequestBody ActiveWalletDto activeWalletDto) throws IOException {
+        String token = request.getHeader(tokenHeader);
+        if (token == null) {
+            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+        }
+        UserDetail userDetail = authService.getUserByToken(token);
+        return  swarmService.activeWallet(userDetail.getId(),activeWalletDto);
     }
 
 

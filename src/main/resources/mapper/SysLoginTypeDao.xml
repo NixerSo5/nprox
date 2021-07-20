@@ -98,11 +98,11 @@
             <if test="login_name != null and login_name != ''">
                 login_name = #{login_name},
             </if>
-            <if test="sys_username != null and sys_username != ''">
-                login_name = #{sys_username},
-            </if>
         </set>
         where id = #{id}
+    </update>
+    <update id="updateBind" parameterType="com.nixer.nprox.entity.SysLoginType">
+     update sys_login_type set login_name = #{login_name}  where id = #{id}
     </update>
 
     <!--通过主键删除-->

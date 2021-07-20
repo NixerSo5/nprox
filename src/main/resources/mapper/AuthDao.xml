@@ -45,6 +45,6 @@
         select SU.*,UI.phone from sys_user  SU LEFT JOIN user_info UI ON UI.userid=SU.id where SU.id = #{id}
     </select>
     <select id="findById" resultType="com.nixer.nprox.entity.common.UserDetail">
-        SELECT id, name, password from sys_user where id=#{userid}
+        SELECT id, name, password,freeze from sys_user where id=#{userid}
     </select>
 </mapper>

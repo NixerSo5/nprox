@@ -27,12 +27,6 @@ public class UserInfo implements Serializable {
 
     private String phone;
 
-    private Long cashDai;
-    /**
-     * 已提现金额
-     */
-    private Long cashoutBzz;
-
     private Date utime;
 
     private String lastip;
@@ -94,21 +88,6 @@ public class UserInfo implements Serializable {
         this.phone = phone;
     }
 
-    public Long getCashDai() {
-        return cashDai;
-    }
-
-    public void setCashDai(Long cashDai) {
-        this.cashDai = cashDai;
-    }
-
-    public Long getCashoutBzz() {
-        return cashoutBzz;
-    }
-
-    public void setCashoutBzz(Long cashoutBzz) {
-        this.cashoutBzz = cashoutBzz;
-    }
 
     public Date getUtime() {
         return utime;

@@ -5,7 +5,9 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.nixer.nprox.dao.*;
 import com.nixer.nprox.entity.AgentUser;
+import com.nixer.nprox.entity.SwarmTokens;
 import com.nixer.nprox.entity.SysLoginType;
+import com.nixer.nprox.entity.UserWallet;
 import com.nixer.nprox.entity.common.SysConfig;
 import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.entity.common.dto.BindLoginDto;
@@ -47,10 +49,10 @@ public class UserOrderServiceImpl implements UserOrderService {
     private UserNotebookDao userNotebookDao;
 
     @Autowired
-    private AgentService  agentService;
+    private AgentService agentService;
 
     @Autowired
-    private UserInfoDao  userInfoDao;
+    private UserInfoDao userInfoDao;
 
     @Autowired
     private RedisUtil redisUtil;
@@ -67,6 +69,12 @@ public class UserOrderServiceImpl implements UserOrderService {
     @Autowired
     private AuthDao authDao;
 
+
+    @Autowired
+    private SwarmTokensDao swarmTokensDao;
+
+    @Autowired
+    private UserWalletDao userWalletDao;
 
 
     /**
@@ -138,67 +146,85 @@ public class UserOrderServiceImpl implements UserOrderService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    //TODO  需要按币种重新构建
     public ResultJson addUserOrder(long userid, UserOrderDto userOrderDto) {
-
-        String unlock =  redisUtil.get("USERUNLOCKVERIFY:USERID:"+userid+"_"+userOrderDto.getDoipaddr());
-        if(StringUtils.isEmpty(unlock)){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"未解锁无法操作!");
+        if(StringUtils.isEmpty(userOrderDto.getWithdrawAddress())){
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "没有提现地址!");
+        }
+        String unlock = redisUtil.get("USERUNLOCKVERIFY:USERID:" + userid + "_" + userOrderDto.getDoipaddr());
+        if (StringUtils.isEmpty(unlock)) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "未解锁无法操作!");
         }
         Agent agent = agentDao.findByOwnerUid(userid);
-        if (agent == null) {
-            return ResultJson.failure(ResultCode.BAD_REQUEST);
+        if (agent == null) {//如果agent为空 设置 agent为 系统
+            agent = new Agent();
+            agent.setId(-1);
+        }
+        //查找币种
+        SwarmTokens swarmTokens = swarmTokensDao.queryById(Integer.valueOf(userOrderDto.getTokenid()));
+        if (swarmTokens == null) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "币种不存在!");
+        }
+        //查找用户钱包
+        UserWallet userWallet = userWalletDao.getWalletByUserIdAndTokenId(userid, userOrderDto.getTokenid());
+        if (userWallet == null) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "该钱包没有激活!");
         }
         //TODO 大B归属矿池的orgid -1  大B属于管理员?  大b也有抽佣比例
         //TODO 执行提现的操作交易流程
         //是否达到标线
-        SysConfig sysConfig =  swarmDao.getSysConfigOutCash();
-        CashOutConfig cashOutConfig = JSONObject.parseObject(sysConfig.getConfig_json(),CashOutConfig.class);
-        //是否可以体现
-        SwarmUserTotalExt userTotal = swarmDao.getSwarmUserTotal(userid);
-        UserAccount userAccount = userNotebookDao.userAccount(userid);
-        //提现具体实现
-        if(userAccount.getCbzz()==null){
-            userAccount.setCbzz(new BigDecimal(0));
-        }
-        if(userAccount.getCashout_bzz() ==null){
-            userAccount.setCashout_bzz(new BigDecimal(0));
-        }
-        BigDecimal climit = cashOutConfig.getMin_bzz().multiply(new BigDecimal(userTotal.getTotal_node_num()));//保底运行
-        BigDecimal userCanCashOut = userAccount.getBzz().subtract(userAccount.getCashout_bzz()).subtract(climit);//最低标准
+//        if(userCanCashOut.compareTo(climit)== -1){
+//          return  ResultJson.failure("无法提现低于最低节点保留bzz");
+//        }
+//        if(cashOutConfig.getCashout_limit().compareTo(userCanCashOut) == 1){
+//            return  ResultJson.failure("无法提现低于最低提现标准");
+//        }
 
-        if(userCanCashOut.compareTo(climit)== -1){
-          return  ResultJson.failure("无法提现低于最低节点保留bzz");
+        if (new BigDecimal(userWallet.getBalance()).compareTo(userOrderDto.getWithdrawNum().multiply(new BigDecimal(Math.pow(10,
+                swarmTokens.getGcd()))))==-1) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "提现金额大于余额!");
         }
-        if(cashOutConfig.getCashout_limit().compareTo(userCanCashOut) == 1){
-            return  ResultJson.failure("无法提现低于最低提现标准");
+        if (userWallet.getBalance() < swarmTokens.getCashoutlimit()) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "低于最低提现标准!");
         }
-        UserOrder userOrder =  new UserOrder();
-        userOrder.setUserid((int)userid);
-        userOrder.setCurrencyType("bzz");
+        //TODO 没有计算节点相关
+        if (userWallet.getBalance() < swarmTokens.getBasenodelimit()) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "低于最低节点保留量!");
+        }
+        UserOrder userOrder = new UserOrder();
+        userOrder.setUserid((int) userid);
+        userOrder.setCurrencyType(swarmTokens.getTokenname());
         userOrder.setServiceType(1);
         userOrder.setQuantity(userOrderDto.getWithdrawNum());
-        // 计算手续费
-        if(userOrderDto.getWithdrawNum().compareTo(userCanCashOut)==1){
-            return  ResultJson.failure("提现金额大于可提现金额");
-        }
-        //TODO 多个agent
-        AgentUser agentUser = agentUserDao.getUserCharges(userid,agent.getId());
-
-        BigDecimal serviceCharges = userOrderDto.getWithdrawNum().multiply(new BigDecimal(agentUser.getCharges()*0.01));
-        userOrder.setServiceCharges(serviceCharges);
+        // TODO 计算手续费
+//        if(userOrderDto.getWithdrawNum().compareTo(userCanCashOut)==1){
+//            return  ResultJson.failure("提现金额大于可提现金额");
+//        }
+//        //TODO 多个agent
+//        AgentUser agentUser = agentUserDao.getUserCharges(userid,agent.getId());
+//
+//        BigDecimal serviceCharges = userOrderDto.getWithdrawNum().multiply(new BigDecimal(agentUser.getCharges()*0.01));
+        userOrder.setServiceCharges(new BigDecimal(swarmTokens.getCut()/100));
         userOrder.setStatus(0);
+        userOrder.setTokenid(swarmTokens.getId());
         userOrder.setRemarks(userOrderDto.getRemarks());
         userOrder.setWithdrawAddress(userOrderDto.getWithdrawAddress());
         //生成一个B的收费单据
-        int i = userOrderDao.insert(userOrder);
 
+        long sublog = userOrderDto.getWithdrawNum().multiply(new BigDecimal(swarmTokens.getGcd())).longValue();
+        int i = userOrderDao.insert(userOrder);
         if(userOrder.getId()>0){
+        userWalletDao.updateWalletBlance(userWallet.getId(),sublog);
         AgentOrder agentOrder = new AgentOrder();
         agentOrder.setOrderbzz(userOrderDto.getWithdrawNum());
         agentOrder.setOrderid(userOrder.getId());
         agentOrder.setIssend(0);
-        agentOrder.setCharges(Long.valueOf(agentUser.getCharges()));
-        agentOrder.setGetbzz(serviceCharges);
+        //抽成为计算
+        agentOrder.setCharges(0l);
+        agentOrder.setGetbzz(new BigDecimal(0));
+        if(agent.getId()==-1){
+            agent.setOwneruserid(-1);
+        }
         agentOrder.setUserid(agent.getOwneruserid());
         i = agentService.insertAgentOrder(agentOrder);
            if(agentOrder.getId()>0){
@@ -212,77 +238,86 @@ public class UserOrderServiceImpl implements UserOrderService {
     }
 
     @Override
-    public ResultJson bindUserPhone(long userid,String ipaddress, BindLoginDtoExt bindLoginDto) {
-        String unlockkey = redisUtil.get("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress);
-        if(StringUtils.isEmpty(unlockkey)){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"账号未解锁无法操作");
+    public ResultJson bindUserPhone(long userid, String ipaddress, BindLoginDtoExt bindLoginDto) {
+        String unlockkey = redisUtil.get("USERUNLOCKVERIFY:USERID:" + userid + "_" + ipaddress);
+        if (StringUtils.isEmpty(unlockkey)) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "账号未解锁无法操作");
         }
         UserInfo userInfo = userInfoDao.findByUserid(userid);
         UserInfo fuserInfo = userInfoDao.findByPhone(bindLoginDto.getBind());
         SysLoginType alluser = sysLoginTypeDao.findByLoginName(bindLoginDto.getBind());
-        if(fuserInfo!=null||alluser!=null){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"该手机号已经被其他账号绑定");
+        if (fuserInfo != null || alluser != null) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "该手机号已经被其他账号绑定");
         }
-        SysLoginType sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid,1);
-        if(sysLoginType!=null||!StringUtils.isEmpty(userInfo.getPhone())){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"该账号已经绑定过手机");
+        SysLoginType sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid, 1);
+        if (sysLoginType != null || !StringUtils.isEmpty(userInfo.getPhone())) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "该账号已经绑定过手机");
         }
-        if(userInfo!=null&&!StringUtils.isEmpty(userInfo.getEmail())){
-                String value2 = redisUtil.get("SENDSMS:" + bindLoginDto.getBind());
-                if (value2 != null && value2.equals(bindLoginDto.getBindcode())) {
-                    UserDetail userDetail = authDao.findById(userid);
-                    sysLoginType = new SysLoginType();
-                    sysLoginType.setLogin_type(1);
-                    sysLoginType.setSys_username(userDetail.getUsername());
-                    sysLoginType.setUserid((int) userid);
-                    sysLoginType.setLogin_name(bindLoginDto.getBind());
-                    sysLoginTypeDao.insert(sysLoginType);
-                    if(sysLoginType.getId()>0){
-                        userInfo.setPhone(bindLoginDto.getBind());
-                        userInfoDao.update(userInfo);
-                    }
-                    redisUtil.remove("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress);
-                    return ResultJson.ok();
+        if (userInfo != null && !StringUtils.isEmpty(userInfo.getEmail())) {
+            String value2 = redisUtil.get("SENDSMS:" + bindLoginDto.getBind());
+            if (value2 != null && value2.equals(bindLoginDto.getBindcode())) {
+                UserDetail userDetail = authDao.findById(userid);
+                sysLoginType = new SysLoginType();
+                sysLoginType.setLogin_type(1);
+                sysLoginType.setSys_username(userDetail.getUsername());
+                sysLoginType.setUserid((int) userid);
+                sysLoginType.setLogin_name(bindLoginDto.getBind());
+                sysLoginTypeDao.insert(sysLoginType);
+                if (sysLoginType.getId() > 0) {
+                    userInfo.setPhone(bindLoginDto.getBind());
+                    userInfoDao.update(userInfo);
                 }
+                redisUtil.remove("USERUNLOCKVERIFY:USERID:" + userid + "_" + ipaddress);
+                return ResultJson.ok();
+            }
         }
-        return ResultJson.failure(ResultCode.BAD_REQUEST,"手机未绑定或者用户不存在");
+        return ResultJson.failure(ResultCode.BAD_REQUEST, "手机未绑定或者用户不存在");
     }
 
     @Override
-    public ResultJson bindUserEmail(long userid,String ipaddress, BindLoginDtoExt bindLoginDto) {
-        String unlockkey = redisUtil.get("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress);
-        if(StringUtils.isEmpty(unlockkey)){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"账号未解锁无法操作");
+    public ResultJson bindUserEmail(long userid, String ipaddress, BindLoginDtoExt bindLoginDto) {
+        String unlockkey = redisUtil.get("USERUNLOCKVERIFY:USERID:" + userid + "_" + ipaddress);
+        if (StringUtils.isEmpty(unlockkey)) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "账号未解锁无法操作");
         }
         UserInfo userInfo = userInfoDao.findByUserid(userid);
         UserInfo fuserInfo = userInfoDao.findByEmail(bindLoginDto.getBind());
         SysLoginType alluser = sysLoginTypeDao.findByLoginName(bindLoginDto.getBind());
-        if(fuserInfo!=null||alluser!=null){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"该邮箱已经被其他账号绑定");
+        if (fuserInfo != null || alluser != null) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "该邮箱已经被其他账号绑定");
         }
-        SysLoginType sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid,2);
-        if(sysLoginType!=null||!StringUtils.isEmpty(userInfo.getEmail())){
-            return ResultJson.failure(ResultCode.BAD_REQUEST,"该账号已经绑定过邮箱");
+        SysLoginType sysLoginType = sysLoginTypeDao.findByUserIdAndLoginType(userid, 2);
+        if (sysLoginType != null || !StringUtils.isEmpty(userInfo.getEmail())) {
+            return ResultJson.failure(ResultCode.BAD_REQUEST, "该账号已经绑定过邮箱");
         }
-        if(userInfo!=null&&!StringUtils.isEmpty(userInfo.getPhone())){
-                String value2 = redisUtil.get("SENDEMAIL:" + bindLoginDto.getBind());
-                if (value2 != null && value2.equals(bindLoginDto.getBindcode())) {
-                    UserDetail userDetail = authDao.findById(userid);
-                    sysLoginType = new SysLoginType();
-                    sysLoginType.setLogin_type(2);
-                    sysLoginType.setSys_username(userDetail.getUsername());
-                    sysLoginType.setUserid((int) userid);
-                    sysLoginType.setLogin_name(bindLoginDto.getBind());
-                    sysLoginTypeDao.insert(sysLoginType);
-                    if(sysLoginType.getId()>0){
-                        userInfo.setEmail(bindLoginDto.getBind());
-                        userInfoDao.update(userInfo);
-                    }
-                    redisUtil.remove("USERUNLOCKVERIFY:USERID:"+userid+"_"+ipaddress);
-                    return ResultJson.ok();
+        if (userInfo != null && !StringUtils.isEmpty(userInfo.getPhone())) {
+            String value2 = redisUtil.get("SENDEMAIL:" + bindLoginDto.getBind());
+            if (value2 != null && value2.equals(bindLoginDto.getBindcode())) {
+                UserDetail userDetail = authDao.findById(userid);
+                sysLoginType = new SysLoginType();
+                sysLoginType.setLogin_type(2);
+                sysLoginType.setSys_username(userDetail.getUsername());
+                sysLoginType.setUserid((int) userid);
+                sysLoginType.setLogin_name(bindLoginDto.getBind());
+                sysLoginTypeDao.insert(sysLoginType);
+                if (sysLoginType.getId() > 0) {
+                    userInfo.setEmail(bindLoginDto.getBind());
+                    userInfoDao.update(userInfo);
                 }
+                redisUtil.remove("USERUNLOCKVERIFY:USERID:" + userid + "_" + ipaddress);
+                return ResultJson.ok();
+            }
         }
-        return ResultJson.failure(ResultCode.BAD_REQUEST,"邮箱未绑定或者用户不存在");
+        return ResultJson.failure(ResultCode.BAD_REQUEST, "邮箱未绑定或者用户不存在");
     }
     //TODO 提现成功
+
+    public static void main(String[] args) {
+       UserWallet userWallet = new UserWallet();
+       userWallet.setBalance(2000000000000000l);
+       int s =
+               new BigDecimal(userWallet.getBalance()).compareTo(new BigDecimal(0.000002000000).multiply(new BigDecimal(Math.pow(10,
+                18))));
+       System.out.println(s );
+    }
 }

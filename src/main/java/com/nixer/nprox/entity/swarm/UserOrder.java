@@ -45,12 +45,52 @@ public class UserOrder implements Serializable {
     @ApiModelProperty(value="收款地址")
     private String withdrawAddress;
 
+
+
+    @ApiModelProperty(value="数量显示")
+    private String quantitys;
+
+    @ApiModelProperty(value="手续费显示")
+    private String serviceChargess;
+
+    private Integer tokenid;
+
+    public Integer getTokenid() {
+        return tokenid;
+    }
+
+    public void setTokenid(Integer tokenid) {
+        this.tokenid = tokenid;
+    }
+
+    public String getQuantitys() {
+        if(this.quantity!=null){
+         return this.quantity.toPlainString();
+        }
+        return "";
+    }
+
+    public void setQuantitys(String quantitys) {
+        this.quantitys = quantitys;
+    }
+
+    public String getServiceChargess() {
+        if(this.serviceCharges!=null){
+            return this.serviceCharges.toPlainString();
+        }
+        return "";
+    }
+
+    public void setServiceChargess(String serviceChargess) {
+        this.serviceChargess = serviceChargess;
+    }
+
     @ApiModelProperty(value="备注")
     private String remarks;
     /**
-     * 0faill  1pending  2ok
+     * 0pending 1faill  2ok
      */
-    @ApiModelProperty(value="0faill  1pending  2ok")
+    @ApiModelProperty(value="0pending 1faill  2ok")
     private Integer status;
 
 

@@ -24,6 +24,9 @@ public class NoteBookDto {
     @ApiModelProperty(value ="创建时间")
     private Date create_date;
 
+    @ApiModelProperty(value ="所添加的toke种类id")
+    private String tokenid;
+
 
     public String getAddress() {
         return address;
@@ -59,5 +62,13 @@ public class NoteBookDto {
 
     public void setCreate_date(Date create_date) {
         this.create_date = create_date;
+    }
+
+    public String getTokenid() {
+        return tokenid;
+    }
+
+    public void setTokenid(String tokenid) {
+        this.tokenid = tokenid;
     }
 }

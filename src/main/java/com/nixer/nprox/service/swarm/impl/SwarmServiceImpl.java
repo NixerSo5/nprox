@@ -1,39 +1,58 @@
 package com.nixer.nprox.service.swarm.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import com.nixer.nprox.dao.SwarmDao;
+import com.nixer.nprox.dao.SwarmTokensDao;
+import com.nixer.nprox.dao.UserWalletDao;
+import com.nixer.nprox.entity.SwarmTokenTotal;
+import com.nixer.nprox.entity.SwarmTokens;
+import com.nixer.nprox.entity.UserWallet;
+import com.nixer.nprox.entity.common.UserDetail;
+import com.nixer.nprox.entity.common.dto.PageFindDto;
 import com.nixer.nprox.entity.swarm.PoolNodes;
 import com.nixer.nprox.entity.swarm.*;
 import com.nixer.nprox.entity.swarm.dto.*;
 import com.nixer.nprox.entity.swarm.pool.PoolConfig;
 import com.nixer.nprox.service.swarm.SwarmService;
-import com.nixer.nprox.tools.RedisUtil;
-import com.nixer.nprox.tools.ResultCode;
-import com.nixer.nprox.tools.ResultJson;
+import com.nixer.nprox.tools.*;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.client.HttpClients;
+import org.apache.http.util.EntityUtils;
+import org.apache.ibatis.javassist.bytecode.StackMap;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class SwarmServiceImpl implements SwarmService {
 
        @Autowired
-       RedisUtil redisUtil;
+       private RedisUtil redisUtil;
 
 //        @Autowired
 //        MongoTemplate mongoTemplate;
 
         @Autowired
-        SwarmDao swarmDao;
+        private SwarmDao swarmDao;
+
+        @Autowired
+        private SwarmTokensDao  swarmTokensDao;
+
+        @Autowired
+        private UserWalletDao userWalletDao;
 
      public static final  BigDecimal GCD = new BigDecimal(0.0000000000000001);
 
@@ -53,20 +72,30 @@ public class SwarmServiceImpl implements SwarmService {
             PoolConfig poolConfig = JSONObject.parseObject(poolConfigStr,PoolConfig.class);
 
             //TODO
-            poolConfig.setNode_num(String.valueOf(3607));
+            poolConfig.setNode_num(String.valueOf(22));
 
             SwarmDayDto swarmDayDto =new SwarmDayDto();
             swarmDayDto.setBzz(poolConfig.getBzz());
-
-
             int nodenum = Integer.valueOf(poolConfig.getNode_num());
             swarmDayDto.setNode_num(poolConfig.getNode_num());
-
-
-            swarmDayDto.setBzz_day(String.valueOf(totalbzz.divide(new BigDecimal(daysize),16, BigDecimal.ROUND_HALF_UP)));
             swarmDayDto.setCashout_day(String.valueOf((int)Math.ceil(totalcash_out/daysize)));
-            swarmDayDto.setSingle_node_cashout(String.valueOf(new BigDecimal(totalcash_out/nodenum).divide(new BigDecimal(daysize),16, BigDecimal.ROUND_HALF_UP)));
-            swarmDayDto.setSingle_node_profit(String.valueOf(totalbzz.divide(new BigDecimal(nodenum),16, BigDecimal.ROUND_HALF_UP)));
+            String bzzday = String.valueOf(totalbzz.divide(new BigDecimal(daysize),16, BigDecimal.ROUND_HALF_UP));
+            if(bzzday.equals("0E-16")){
+                bzzday="0";
+            }
+            swarmDayDto.setBzz_day(bzzday);
+            String singlenodecashout =
+                    String.valueOf(new BigDecimal(totalcash_out/nodenum).divide(new BigDecimal(daysize),16, BigDecimal.ROUND_HALF_UP));
+            if(singlenodecashout.equals("0E-16")){
+                singlenodecashout="0";
+            }
+            swarmDayDto.setSingle_node_cashout(singlenodecashout);
+            String singlenodeprofit = String.valueOf(totalbzz.divide(new BigDecimal(nodenum),16,
+                    BigDecimal.ROUND_HALF_UP));
+            if(singlenodeprofit.equals("0E-16")){
+                singlenodeprofit="0";
+            }
+            swarmDayDto.setSingle_node_profit(singlenodeprofit);
             return swarmDayDto;
         }
         return null;
@@ -76,13 +105,11 @@ public class SwarmServiceImpl implements SwarmService {
     public UserPoolUnit userPoolState(long userid) {
         UserPoolUnit userPoolUnit = new UserPoolUnit();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
         c.add(Calendar.DATE, -1);
         Date start = c.getTime();
         String beforday= sdf.format(start);//前一天
-
         //用户总计
         SwarmUserTotalExt swarmUserTotal = swarmDao.getSwarmUserTotal(userid);
         SwarmUserTotalDto swarmUserTotalDto = new SwarmUserTotalDto();
@@ -92,9 +119,7 @@ public class SwarmServiceImpl implements SwarmService {
         swarmUserTotalDto.setBzz(new BigDecimal(swarmUserTotal.getBzz()).multiply(GCD));
         swarmUserTotalDto.setTotal_node_num(swarmUserTotal.getTotal_node_num());
         userPoolUnit.setSwarmUserTotal(swarmUserTotalDto);
-
         String nodesnum = redisUtil.get("POOL:NODES");
-
         SwarmUserDayExt  swarmUserDay = swarmDao.getSwarmUserDay(userid,sdf.format(new Date()));
         SwarmUserDayDto swarmUserDayDto=new SwarmUserDayDto();
         //今日没有数据添加昨天数据来做
@@ -113,9 +138,9 @@ public class SwarmServiceImpl implements SwarmService {
             swarmUserDayDto.setUtime(swarmUserDay.getUtime());
         }
         userPoolUnit.setSwarmUserDay(swarmUserDayDto);
-
         SwarmDay swarmDay = swarmDao.getSwarmDay(sdf.format(new Date()));
         if(swarmDay==null){
+            swarmDay =new SwarmDay();
             swarmDay.setBzzout(0L);
             swarmDay.setCashout(0);
             swarmDay.setNodes_num(Integer.valueOf(nodesnum));
@@ -129,7 +154,6 @@ public class SwarmServiceImpl implements SwarmService {
         swarmUserExp.setUser_day_bzz(new BigDecimal(swarmDay.getBzzout()).multiply(GCD).divide(new BigDecimal(swarmDay.getNodes_num()),16,
                 BigDecimal.ROUND_HALF_UP).multiply(userNodeNum));
         swarmUserExp.setUser_day_cashout(new BigDecimal(swarmDay.getCashout()).divide(new BigDecimal(swarmDay.getNodes_num()),16,BigDecimal.ROUND_HALF_UP).multiply(userNodeNum));
-
         userPoolUnit.setSwarmUserExp(swarmUserExp);
         return userPoolUnit;
     }
@@ -191,6 +215,47 @@ public class SwarmServiceImpl implements SwarmService {
         return pageInfo;
     }
 
+    @Override
+    public ResultJson<List<UserWalletDto>> userWallet(UserDetail userDetail) {
+        long userid = userDetail.getId();
+        List<UserWalletDto> userWalletDtoList = userWalletDao.getWalletListByUserId(userid);
+        return  ResultJson.ok(userWalletDtoList);
+    }
+
+    @Override
+    public ResultJson activeWallet(long userid, ActiveWalletDto activeWalletDto) {
+        //TODO 具体业务没做
+        UserWallet userWallet = userWalletDao.findByUserAndTokenId(userid,activeWalletDto.getTokenid());
+        if(userWallet !=null ){
+            return ResultJson.failure(ResultCode.BAD_REQUEST,"已存在该钱包");
+        }
+        userWallet = new UserWallet();
+        userWallet.setBalance(0l);
+        userWallet.setUserid((int) userid);
+        userWallet.setTokenid(activeWalletDto.getTokenid());
+        userWallet.setCashout(0l);
+        userWallet.setUnitnum(0d);
+        userWalletDao.insert(userWallet);
+        if(userWallet.getId()>0){
+            return ResultJson.ok();
+        }
+        return ResultJson.failure(ResultCode.BAD_REQUEST,"保存失败");
+    }
+
+    @Override
+    public SwarmTokenTotal tokensInfo(WalletInfoDto walletInfoDto) {
+        SwarmTokenTotal swarmTokensTotal = swarmDao.tokensInfo(walletInfoDto);
+        if(swarmTokensTotal ==null){
+            swarmTokensTotal =  new SwarmTokenTotal();
+            swarmTokensTotal.setTotal(0l);
+            swarmTokensTotal.setGcd(0);
+            swarmTokensTotal.setToday(0l);
+            swarmTokensTotal.setYesterday(0l);
+            swarmTokensTotal.setUtime(new Date());
+        }
+        return swarmTokensTotal;
+    }
+
 //    @Override
 //    public ResultJson useNodesAdd(UserNodeUpdateDto userNodeUpdateDto, long userid) {
 //        //查询是否存在该节点该节点是否存在关系
@@ -226,19 +291,42 @@ public class SwarmServiceImpl implements SwarmService {
         return this.swarmDao.getNodesNum();
     }
 
+    @Override
+    public PageInfo<SwarmTokens> tokensList(PageFindDto pageFindDto, long userid) {
+        PageHelper.startPage(pageFindDto.getIndex(), pageFindDto.getSize());
+        List<SwarmTokens> lists = swarmTokensDao.tokensList(userid,null);
+        PageInfo<SwarmTokens> pageInfo = new PageInfo<SwarmTokens>(lists);
+        return pageInfo;
+    }
 
-    public static void main(String[] args) {
-        SimpleDateFormat sdf =new SimpleDateFormat("yyyy-MM-dd");
-        for (int i = 30; i >= 0; i--) {
-            Calendar c = Calendar.getInstance();
-            c.setTime(new Date());
-            c.add(Calendar.DATE, -i);
-            Date start = c.getTime();
-            String beforday= sdf.format(start);//前一天
-            System.out.println(beforday);
+
+    public static void main2(String[] args) {
+//        SimpleDateFormat sdf =new SimpleDateFormat("yyyy-MM-dd");
+//        for (int i = 30; i >= 0; i--) {
+//            Calendar c = Calendar.getInstance();
+//            c.setTime(new Date());
+//            c.add(Calendar.DATE, -i);
+//            Date start = c.getTime();
+//            String beforday= sdf.format(start);//前一天
+//            System.out.println(beforday);
+//        }
+        int cq = 3600;
+        long x = 2000000000000l;
+        Random rand = new Random();
+        for (int i = 0; i < 30; i++) {
+            int stq=0;
+           int s = rand.nextInt(360);
+            int sf = rand.nextInt(2);
+            //7718181175890047
+          //  long xfs = rand.nextLong(7718181175890047l);
+            if(sf ==0){
+                stq= cq+s;
+            }else{
+                stq =cq-s;
+            }
+            long cqcs = x*stq;
+           System.out.println(stq+"==="+cqcs);
         }
-
-
     }
 //      mongoTemplate.save(info);
 //      return mongoTemplate.findOne(query, UserLoginInfo.class);
@@ -246,6 +334,54 @@ public class SwarmServiceImpl implements SwarmService {
 //      return mongoTemplate.findAndRemove(query, UserLoginInfo.class);
 
 
+    public static void main(String[] args) throws ParseException, IOException {
+        String jsonstr = HttpUtil.doGet("https://api2.chiaexplorer.com/chart/xchTibDay?period=2w");
+        JSONObject jso =   JSONObject.parseObject(jsonstr);
+        JSONArray jsa = jso.getJSONArray("timestamp");
+        JSONArray jsadata = jso.getJSONArray("data");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String time =  sdf.format(new Date());
+        Calendar c = Calendar.getInstance();
+        c.setTime(sdf.parse(time));
+        c.add(Calendar.DATE, -1);
+        long endtime = sdf.parse(time).getTime();
+        long starttime = c.getTime().getTime();
+        BigDecimal rvalue = new BigDecimal(0);
+        int numbers = 0;
+        for (int i = 0; i < jsa.size(); i++) {
+            long ntime = jsa.getLong(i);
+            if(ntime > starttime && ntime < endtime){
+                rvalue =  rvalue.add(new BigDecimal(jsadata.getString(i)));
+                numbers++;
+            }
+        }
+        rvalue = rvalue.multiply(new BigDecimal(384)).divide(new BigDecimal(numbers),10,BigDecimal.ROUND_HALF_UP);
+        rvalue = rvalue.add(rvalue.multiply(new BigDecimal(0.1)));
+        System.out.println(rvalue);
+
+    }
+
+    public static void main4(String[] args) throws Exception{
+        HttpClientBuilder builder = HttpClients.custom();
+        //对照UA字串的标准格式理解一下每部分的意思
+        builder.setUserAgent("Mozilla/5.0(Windows;U;Windows NT 5.1;en-US;rv:0.9.4)");
+        final CloseableHttpClient httpClient = builder.build();
+        // 1. 生成Http对象
+        HttpGet httpGet = new HttpGet("https://api2.chiaexplorer.com/chart/xchTibDay?period=2w");
+        // 2.1 设置http请求头 User-Agent ,模拟第一次请求,
+        httpGet.setHeader("User-Agent","Mozilla/5.0(Windows NT 6.1;Win64; x64; rv:50.0) Gecko/20100101 Firefox/50.0");
+        // 3. 执行httpGet
+        CloseableHttpResponse response = httpClient.execute(httpGet);
+        // 4. 获取返回的实体
+        HttpEntity httpEntity = response.getEntity();
+        // 5. 解析实体类
+        String entityJson = EntityUtils.toString(httpEntity,"utf-8");
+        // 6. 打印数据,观看结果
+        System.out.println("返回的数据是:" + entityJson);
+        // 7. 关闭连接对象
+        response.close();
+        httpClient.close();
+    }
 
 
 }

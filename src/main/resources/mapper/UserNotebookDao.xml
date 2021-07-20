@@ -55,7 +55,7 @@
         </where>
     </select>
     <select id="userNoteBookList" resultType="com.nixer.nprox.entity.swarm.dto.NoteBookDto">
-        SELECT * FROM  user_notebook WHERE userid=#{userid}
+        SELECT * FROM  user_notebook WHERE userid=#{userid} and tokenid=#{tokenid}
     </select>
     <select id="userAccount" resultType="com.nixer.nprox.entity.swarm.dto.UserAccount">
         SELECT
@@ -64,33 +64,30 @@
             imgurl,
             email,
             phone,
-            cash_dai,
             total_cashout,
             total_get_bzz,
             total_send_bzz,
             bzz,
-            cashout_bzz,
             ctime,
             utime,
             lastip
         FROM
             user_info UIF
                 RIGHT JOIN swarm_user_total SUT ON SUT.userid = UIF.userid
-        WHERE
-            SUT.userid = #{userid}
+        where   SUT.userid = #{userid}
     </select>
 
     <!--新增所有列-->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">
-        insert into nprox.user_notebook(address, remarks, create_date, userid)
-        values (#{address}, #{remarks}, now(), #{userid})
+        insert into nprox.user_notebook(address, remarks, create_date, userid,tokenid)
+        values (#{address}, #{remarks}, now(), #{userid},#{tokenid})
     </insert>
 
     <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
-        insert into nprox.user_notebook(address, remarks, create_date, userid)
+        insert into nprox.user_notebook(address, remarks, create_date, userid,tokenid)
         values
         <foreach collection="entities" item="entity" separator=",">
-            (#{entity.address}, #{entity.remarks}, #{entity.createDate}, #{entity.userid})
+            (#{entity.address}, #{entity.remarks}, #{entity.createDate}, #{entity.userid},#{entity.tokenid})
         </foreach>
     </insert>
 
