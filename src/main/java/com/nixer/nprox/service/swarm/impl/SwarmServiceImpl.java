@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -230,11 +231,11 @@ public class SwarmServiceImpl implements SwarmService {
             return ResultJson.failure(ResultCode.BAD_REQUEST,"已存在该钱包");
         }
         userWallet = new UserWallet();
-        userWallet.setBalance(0l);
+        userWallet.setBalance(new BigInteger("0"));
         userWallet.setUserid((int) userid);
         userWallet.setTokenid(activeWalletDto.getTokenid());
-        userWallet.setCashout(0l);
-        userWallet.setUnitnum(0d);
+        userWallet.setCashout(new BigInteger("0"));
+        userWallet.setUnitnum(0l);
         userWalletDao.insert(userWallet);
         if(userWallet.getId()>0){
             return ResultJson.ok();

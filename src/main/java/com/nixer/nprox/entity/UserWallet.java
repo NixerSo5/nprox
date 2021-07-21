@@ -3,6 +3,7 @@ package com.nixer.nprox.entity;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 
 /**
  * (UserWallet)实体类
@@ -19,18 +20,18 @@ public class UserWallet implements Serializable {
 
     private Integer tokenid;
 
-    private Long cashout;
+    private BigInteger cashout;
 
-    private Long balance;
+    private BigInteger balance;
 
-    private Double unitnum	;
+    private Long unitnum	;
 
 
-    public Double getUnitnum() {
+    public Long getUnitnum() {
         return unitnum;
     }
 
-    public void setUnitnum(Double unitnum) {
+    public void setUnitnum(Long unitnum) {
         this.unitnum = unitnum;
     }
 
@@ -58,19 +59,19 @@ public class UserWallet implements Serializable {
         this.tokenid = tokenid;
     }
 
-    public Long getCashout() {
+    public BigInteger getCashout() {
         return cashout;
     }
 
-    public void setCashout(Long cashout) {
+    public void setCashout(BigInteger cashout) {
         this.cashout = cashout;
     }
 
-    public Long getBalance() {
+    public BigInteger getBalance() {
         return balance;
     }
 
-    public void setBalance(Long balance) {
+    public void setBalance(BigInteger balance) {
         this.balance = balance;
     }
 }

@@ -5,8 +5,8 @@
     <resultMap type="com.nixer.nprox.entity.UserWallet" id="UserWalletMap">
         <result property="id" column="id" jdbcType="INTEGER"/>
         <result property="userid" column="userid" jdbcType="INTEGER"/>
-        <result property="tokenid" column="tokenid" jdbcType="INTEGER"/>
-        <result property="cashout" column="cashout" jdbcType="INTEGER"/>
+        <result property="tokenid" column="tokenid" jdbcType="VARCHAR"/>
+        <result property="cashout" column="cashout" jdbcType="VARCHAR"/>
         <result property="balance" column="balance" jdbcType="VARCHAR"/>
     </resultMap>
 
@@ -121,7 +121,7 @@
         where id = #{id}
     </update>
     <update id="updateWalletBlance">
-        update user_wallet set balance =balance -#{sublog} where id =#{walletid}
+        update user_wallet set balance =#{sublog} where id =#{walletid}
     </update>
 
     <!--通过主键删除-->

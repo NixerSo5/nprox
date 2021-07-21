@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.io.Serializable;
+import java.math.BigInteger;
 
 /**
  * (SwarmTokens)实体类
@@ -25,10 +26,10 @@ public class SwarmTokens implements Serializable {
     private String tokenimgurl;
 
     @ApiModelProperty(value="最小提现金额")
-    private Long cashoutlimit;
+    private BigInteger cashoutlimit;
 
     @ApiModelProperty(value="最小运行金额")
-    private Long basenodelimit;
+    private BigInteger basenodelimit;
 
     @ApiModelProperty(value="平台抽成比例")
     private Long cut;
@@ -66,19 +67,20 @@ public class SwarmTokens implements Serializable {
         this.tokenimgurl = tokenimgurl;
     }
 
-    public Long getCashoutlimit() {
+    public BigInteger getCashoutlimit() {
         return cashoutlimit;
     }
 
-    public void setCashoutlimit(Long cashoutlimit) {
+    public void setCashoutlimit(BigInteger cashoutlimit) {
         this.cashoutlimit = cashoutlimit;
     }
 
-    public Long getBasenodelimit() {
+
+    public BigInteger getBasenodelimit() {
         return basenodelimit;
     }
 
-    public void setBasenodelimit(Long basenodelimit) {
+    public void setBasenodelimit(BigInteger basenodelimit) {
         this.basenodelimit = basenodelimit;
     }
 

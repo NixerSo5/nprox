@@ -6,8 +6,8 @@
         <result property="id" column="id" jdbcType="INTEGER"/>
         <result property="tokenname" column="tokenname" jdbcType="VARCHAR"/>
         <result property="tokenimgurl" column="tokenimgurl" jdbcType="VARCHAR"/>
-        <result property="cashoutlimit" column="cashoutlimit" jdbcType="INTEGER"/>
-        <result property="basenodelimit" column="basenodelimit" jdbcType="INTEGER"/>
+        <result property="cashoutlimit" column="cashoutlimit" jdbcType="VARCHAR"/>
+        <result property="basenodelimit" column="basenodelimit" jdbcType="VARCHAR"/>
         <result property="cut" column="cut" jdbcType="INTEGER"/>
         <result property="gcd" column="gcd" jdbcType="INTEGER"/>
     </resultMap>

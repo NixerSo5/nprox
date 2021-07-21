@@ -102,7 +102,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 // 图像验证码不需要权限
                 .antMatchers("/defaultKaptcha").permitAll()
                 //允许匿名及登录用户访问
-                .antMatchers("/auth/**", "/api/**","/error/**").permitAll()
+                .antMatchers("/auth/**", "/api/**","/error/**","/test/**").permitAll()
                 // 所有请求都需要认证
                 .anyRequest().authenticated()
                 .and().addFilterBefore(authenticationTokenFilter, UsernamePasswordAuthenticationFilter.class);

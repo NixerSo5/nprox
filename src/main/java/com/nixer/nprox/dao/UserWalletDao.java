@@ -5,6 +5,7 @@ import com.nixer.nprox.entity.swarm.dto.UserWalletDto;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -88,6 +89,6 @@ public interface UserWalletDao {
 
     UserWallet findByUserAndTokenId(@Param("userid")long userid, @Param("tokenid")Integer tokenid);
 
-    int updateWalletBlance(@Param("walletid")long walletid, @Param("sublog")long sublog);
+    int updateWalletBlance(@Param("walletid")long walletid, @Param("sublog") BigInteger sublog);
 }
 

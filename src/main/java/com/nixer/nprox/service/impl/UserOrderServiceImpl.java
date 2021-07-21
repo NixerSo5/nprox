@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 /**
@@ -151,10 +152,10 @@ public class UserOrderServiceImpl implements UserOrderService {
         if(StringUtils.isEmpty(userOrderDto.getWithdrawAddress())){
             return ResultJson.failure(ResultCode.BAD_REQUEST, "没有提现地址!");
         }
-        String unlock = redisUtil.get("USERUNLOCKVERIFY:USERID:" + userid + "_" + userOrderDto.getDoipaddr());
-        if (StringUtils.isEmpty(unlock)) {
-            return ResultJson.failure(ResultCode.BAD_REQUEST, "未解锁无法操作!");
-        }
+//        String unlock = redisUtil.get("USERUNLOCKVERIFY:USERID:" + userid + "_" + userOrderDto.getDoipaddr());
+//        if (StringUtils.isEmpty(unlock)) {
+//            return ResultJson.failure(ResultCode.BAD_REQUEST, "未解锁无法操作!");
+//        }
         Agent agent = agentDao.findByOwnerUid(userid);
         if (agent == null) {//如果agent为空 设置 agent为 系统
             agent = new Agent();
@@ -180,15 +181,17 @@ public class UserOrderServiceImpl implements UserOrderService {
 //            return  ResultJson.failure("无法提现低于最低提现标准");
 //        }
 
-        if (new BigDecimal(userWallet.getBalance()).compareTo(userOrderDto.getWithdrawNum().multiply(new BigDecimal(Math.pow(10,
-                swarmTokens.getGcd()))))==-1) {
-            return ResultJson.failure(ResultCode.BAD_REQUEST, "提现金额大于余额!");
-        }
-        if (userWallet.getBalance() < swarmTokens.getCashoutlimit()) {
+//        if (new BigDecimal(userWallet.getBalance()).compareTo(userOrderDto.getWithdrawNum().multiply(new BigDecimal(Math.pow(10,
+//                swarmTokens.getGcd()))))==-1) {
+//            return ResultJson.failure(ResultCode.BAD_REQUEST, "提现金额大于余额!");
+//        }
+        //<-1  =0 >1
+        if (userWallet.getBalance().compareTo(swarmTokens.getCashoutlimit())==-1) {
             return ResultJson.failure(ResultCode.BAD_REQUEST, "低于最低提现标准!");
         }
         //TODO 没有计算节点相关
-        if (userWallet.getBalance() < swarmTokens.getBasenodelimit()) {
+
+        if (userWallet.getBalance().compareTo(swarmTokens.getBasenodelimit().multiply(new BigInteger(userWallet.getUnitnum().toString())))==-1) {
             return ResultJson.failure(ResultCode.BAD_REQUEST, "低于最低节点保留量!");
         }
         UserOrder userOrder = new UserOrder();
@@ -211,10 +214,11 @@ public class UserOrderServiceImpl implements UserOrderService {
         userOrder.setWithdrawAddress(userOrderDto.getWithdrawAddress());
         //生成一个B的收费单据
 
-        long sublog = userOrderDto.getWithdrawNum().multiply(new BigDecimal(swarmTokens.getGcd())).longValue();
+        BigInteger sublog = userOrderDto.getWithdrawNum().multiply(new BigDecimal(Math.pow(10,swarmTokens.getGcd()))).toBigInteger();
+        BigInteger nowbalence = userWallet.getBalance().subtract(sublog);
         int i = userOrderDao.insert(userOrder);
         if(userOrder.getId()>0){
-        userWalletDao.updateWalletBlance(userWallet.getId(),sublog);
+        userWalletDao.updateWalletBlance(userWallet.getId(),nowbalence);
         AgentOrder agentOrder = new AgentOrder();
         agentOrder.setOrderbzz(userOrderDto.getWithdrawNum());
         agentOrder.setOrderid(userOrder.getId());
@@ -314,7 +318,7 @@ public class UserOrderServiceImpl implements UserOrderService {
 
     public static void main(String[] args) {
        UserWallet userWallet = new UserWallet();
-       userWallet.setBalance(2000000000000000l);
+       userWallet.setBalance(new BigInteger("2000000000000000"));
        int s =
                new BigDecimal(userWallet.getBalance()).compareTo(new BigDecimal(0.000002000000).multiply(new BigDecimal(Math.pow(10,
                 18))));

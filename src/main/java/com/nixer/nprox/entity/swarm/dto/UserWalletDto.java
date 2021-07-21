@@ -5,6 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 import io.swagger.models.auth.In;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 
 @ApiModel
 public class UserWalletDto {
@@ -20,10 +21,10 @@ public class UserWalletDto {
     private String tokenimgurl;
 
     @ApiModelProperty(value="已提现金额long")
-    private Long  cashout;
+    private BigInteger cashout;
 
     @ApiModelProperty(value="余额long")
-    private Long  balance;
+    private BigInteger  balance;
 
     @ApiModelProperty(value="小数位数")
     private Integer gcd;
@@ -39,7 +40,7 @@ public class UserWalletDto {
     private String scashout;
 
     @ApiModelProperty(value="拥有组合数")
-    private Double unitnum;
+    private Long unitnum;
 
 
     public Integer getIsactive() {
@@ -74,19 +75,19 @@ public class UserWalletDto {
         this.tokenimgurl = tokenimgurl;
     }
 
-    public Long getCashout() {
+    public BigInteger getCashout() {
         return cashout;
     }
 
-    public void setCashout(Long cashout) {
+    public void setCashout(BigInteger cashout) {
         this.cashout = cashout;
     }
 
-    public Long getBalance() {
+    public BigInteger getBalance() {
         return balance;
     }
 
-    public void setBalance(Long balance) {
+    public void setBalance(BigInteger balance) {
         this.balance = balance;
     }
 
@@ -114,20 +115,21 @@ public class UserWalletDto {
         this.scashout = scashout;
     }
 
-    public static String castString(long val,int gcd) {
+    public static String castString(BigInteger val,int gcd) {
        double x =  Math.pow(10, gcd);
-       return new BigDecimal(val/x).divide(new BigDecimal(1),18,BigDecimal.ROUND_HALF_DOWN).toPlainString();
+       return new BigDecimal(val).divide(new BigDecimal(x),18,BigDecimal.ROUND_HALF_DOWN).toPlainString();
     }
 
-    public Double getUnitnum() {
+    public Long getUnitnum() {
         return unitnum;
     }
 
-    public void setUnitnum(Double unitnum) {
+    public void setUnitnum(Long unitnum) {
         this.unitnum = unitnum;
     }
 
     public static void main(String[] args) {
-        System.out.println(castString(200000000000l,18));
+        System.out.println(new BigDecimal(new BigInteger("1")).divide(new BigDecimal(new BigInteger(
+                "1000000000000000000000000")),18,BigDecimal.ROUND_HALF_UP).toPlainString());
     }
 }
