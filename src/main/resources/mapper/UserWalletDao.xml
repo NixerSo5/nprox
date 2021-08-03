@@ -63,7 +63,8 @@
             IFNULL(balance,0) AS balance,
             ST.gcd,
             IFNULL(UW.id,0) AS  isactive,
-            IFNULL(UW.unitnum,0) AS  unitnum
+            IFNULL(UW.unitnum,0) AS  tunitnum,
+            ST.unitgcd
         FROM
             swarm_tokens ST
                 LEFT  JOIN (SELECT * FROM user_wallet WHERE userid= #{userid}) UW ON ST.id = UW.tokenid
