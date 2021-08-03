@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.XchDayDao">
+
+    <resultMap type="com.nixer.nprox.entity.XchDay" id="XchDayMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="update_date" column="update_date" jdbcType="VARCHAR"/>
+        <result property="cashout" column="cashout" jdbcType="VARCHAR"/>
+        <result property="ctime" column="ctime" jdbcType="TIMESTAMP"/>
+        <result property="nodenum" column="nodenum" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="XchDayMap">
+        select id,
+               update_date,
+               cashout,
+               ctime,
+               nodenum
+        from nprox.xch_day
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="XchDayMap">
+        select id,
+               update_date,
+               cashout,
+               ctime,
+               nodenum
+        from nprox.xch_day limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="XchDayMap">
+        select
+        id, update_date, cashout, ctime, nodenum
+        from nprox.xch_day
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="update_date != null and update_date != ''">
+                and update_date = #{update_date}
+            </if>
+            <if test="cashout != null and cashout != ''">
+                and cashout = #{cashout}
+            </if>
+            <if test="ctime != null">
+                and ctime = #{ctime}
+            </if>
+            <if test="nodenum != null">
+                and nodenum = #{nodenum}
+            </if>
+        </where>
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.xch_day(update_date, cashout, ctime, nodenum)
+        values (#{update_date}, #{cashout}, #{ctime}, #{nodenum})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.xch_day(update_date, cashout, ctime, nodenum)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.update_date}, #{entity.cashout}, #{entity.ctime}, #{entity.nodenum})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.xch_day(update_date, cashout, ctime, nodenum)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.update_date}, #{entity.cashout}, #{entity.ctime}, #{entity.nodenum})
+        </foreach>
+        on duplicate key update
+        update_date = values(update_date) , cashout = values(cashout) , ctime = values(ctime) , nodenum =
+        values(nodenum)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.xch_day
+        <set>
+            <if test="update_date != null and update_date != ''">
+                update_date = #{update_date},
+            </if>
+            <if test="cashout != null and cashout != ''">
+                cashout = #{cashout},
+            </if>
+            <if test="ctime != null">
+                ctime = #{ctime},
+            </if>
+            <if test="nodenum != null">
+                nodenum = #{nodenum},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.xch_day
+        where id = #{id}
+    </delete>
+
+</mapper>
+

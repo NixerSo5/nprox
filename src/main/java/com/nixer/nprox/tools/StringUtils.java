@@ -12,6 +12,16 @@ public class StringUtils {
 
     public StringUtils() {
     }
+
+
+    public static String  longToString(Long num){
+        if(num!=null){
+            return num.toString();
+        }else{
+            return "0";
+        }
+
+    }
     public static boolean isNotEmpty(CharSequence cs) {
         return !isEmpty(cs);
     }

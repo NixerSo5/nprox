@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.XchUserDayDao">
+
+    <resultMap type="com.nixer.nprox.entity.XchUserDay" id="XchUserDayMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="cashout" column="cash_out" jdbcType="VARCHAR"/>
+        <result property="date" column="date" jdbcType="VARCHAR"/>
+        <result property="utime" column="utime" jdbcType="TIMESTAMP"/>
+        <result property="nodenum" column="node_num" jdbcType="INTEGER"/>
+        <result property="xchjson" column="xchjson" jdbcType="VARCHAR"/>
+    </resultMap>
+    <select id="getUserXchDay" resultType="com.nixer.nprox.entity.XchUserDay">
+        SELECT
+            *
+        FROM
+            xch_user_day  WHERE date = #{beforday} and userid = #{userid}
+    </select>
+    <select id="getUserXchDayPoolLine" resultType="com.nixer.nprox.entity.XchUserDay">
+        <![CDATA[
+          SELECT * FROM xch_user_day WHERE userid = #{userid} AND  utime>#{start}  and utime<#{end} order by utime asc
+        ]]>
+    </select>
+
+
+</mapper>
+

@@ -1,19 +1,16 @@
 package com.nixer.nprox.entity.swarm.dto;
 
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-@ApiModel
-public class LineDateDto {
+public class XchLineDataDto {
+
 
     @ApiModelProperty(value="日期")
     private String date;
 
-    @ApiModelProperty(value="出票金额")
+    @ApiModelProperty(value="金额")
     private String cashout;
 
-    @ApiModelProperty(value="出票数")
-    private String cheques;
 
     public String getDate() {
         return date;
@@ -29,13 +26,5 @@ public class LineDateDto {
 
     public void setCashout(String cashout) {
         this.cashout = cashout;
-    }
-
-    public String getCheques() {
-        return cheques;
-    }
-
-    public void setCheques(String cheques) {
-        this.cheques = cheques;
     }
 }

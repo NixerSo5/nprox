@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel
-public class UserPoolUnit {
+public class BzzUserPoolUnit {// bzz
 
     @ApiModelProperty(value="用户总计")
     private SwarmUserTotalDto swarmUserTotal;

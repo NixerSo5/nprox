@@ -40,7 +40,14 @@ public class UserWalletDto {
     private String scashout;
 
     @ApiModelProperty(value="拥有组合数")
-    private Long unitnum;
+    private String unitnum;
+
+
+    @ApiModelProperty(hidden = true)
+    private Long tunitnum;
+
+    @ApiModelProperty(hidden = true)
+    private Integer unitgcd;
 
 
     public Integer getIsactive() {
@@ -120,12 +127,33 @@ public class UserWalletDto {
        return new BigDecimal(val).divide(new BigDecimal(x),18,BigDecimal.ROUND_HALF_DOWN).toPlainString();
     }
 
-    public Long getUnitnum() {
-        return unitnum;
+    public String getUnitnum() {
+        if(unitgcd!=0){
+            BigDecimal nb = new BigDecimal(this.tunitnum/unitgcd).divide(new BigDecimal(1),2,BigDecimal.ROUND_HALF_UP);
+            return nb.toPlainString();
+        }else {
+            return this.tunitnum.toString();
+        }
     }
 
-    public void setUnitnum(Long unitnum) {
+    public void setUnitnum(String unitnum) {
         this.unitnum = unitnum;
+    }
+
+    public Long getTunitnum() {
+        return tunitnum;
+    }
+
+    public void setTunitnum(Long tunitnum) {
+        this.tunitnum = tunitnum;
+    }
+
+    public Integer getUnitgcd() {
+        return unitgcd;
+    }
+
+    public void setUnitgcd(Integer unitgcd) {
+        this.unitgcd = unitgcd;
     }
 
     public static void main(String[] args) {

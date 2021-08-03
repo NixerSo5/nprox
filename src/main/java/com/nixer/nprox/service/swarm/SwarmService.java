@@ -5,6 +5,7 @@ import com.nixer.nprox.entity.SwarmTokenTotal;
 import com.nixer.nprox.entity.SwarmTokens;
 import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.entity.common.dto.PageFindDto;
+import com.nixer.nprox.entity.common.dto.SinglePramDto;
 import com.nixer.nprox.entity.swarm.SwarmNodes;
 import com.nixer.nprox.entity.swarm.dto.*;
 import com.nixer.nprox.tools.ResultJson;
@@ -14,11 +15,11 @@ import java.util.List;
 public interface SwarmService {
     SwarmDayDto getSwarmDay();
 
-    UserPoolUnit userPoolState(long userid);
+    BzzUserPoolUnit userPoolState(long userid);
 
     UserNodesStateDto userNodesState(long userid);
 
-    List<LineDateDto> userPoolStateLine(long userid);
+    List<LineDateDto> userBzzPoolStateLine(long userid);
 
     PageInfo<SwarmNodes> useNodesList(NodesFindDto nodesFindDto, long userid);
 
@@ -35,4 +36,8 @@ public interface SwarmService {
     ResultJson activeWallet(long id, ActiveWalletDto activeWalletDto);
 
     SwarmTokenTotal tokensInfo(WalletInfoDto walletInfoDto);
+
+    UserTokenPoolDto userTokenPreview(long userid, SinglePramDto singlePramDto);
+
+    UserTokenLineDto userTokenPoolStateLine(long userid, SinglePramDto singlePramDto);
 }

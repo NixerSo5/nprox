@@ -4,14 +4,11 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.nixer.nprox.dao.SwarmDao;
-import com.nixer.nprox.dao.SwarmTokensDao;
-import com.nixer.nprox.dao.UserWalletDao;
-import com.nixer.nprox.entity.SwarmTokenTotal;
-import com.nixer.nprox.entity.SwarmTokens;
-import com.nixer.nprox.entity.UserWallet;
+import com.nixer.nprox.dao.*;
+import com.nixer.nprox.entity.*;
 import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.entity.common.dto.PageFindDto;
+import com.nixer.nprox.entity.common.dto.SinglePramDto;
 import com.nixer.nprox.entity.swarm.PoolNodes;
 import com.nixer.nprox.entity.swarm.*;
 import com.nixer.nprox.entity.swarm.dto.*;
@@ -25,7 +22,6 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.ibatis.javassist.bytecode.StackMap;
 import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.stereotype.Service;
@@ -54,6 +50,16 @@ public class SwarmServiceImpl implements SwarmService {
 
         @Autowired
         private UserWalletDao userWalletDao;
+
+
+        @Autowired
+        private XchDayDao xchDayDao;
+
+        @Autowired
+        private XchUserDayDao xchUserDayDao;
+
+        @Autowired
+        private XchUserDao xchUserDao;
 
      public static final  BigDecimal GCD = new BigDecimal(0.0000000000000001);
 
@@ -103,8 +109,8 @@ public class SwarmServiceImpl implements SwarmService {
     }
 
     @Override
-    public UserPoolUnit userPoolState(long userid) {
-        UserPoolUnit userPoolUnit = new UserPoolUnit();
+    public BzzUserPoolUnit userPoolState(long userid) {
+        BzzUserPoolUnit userPoolUnit = new BzzUserPoolUnit();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
@@ -184,7 +190,7 @@ public class SwarmServiceImpl implements SwarmService {
     }
 
     @Override
-    public List<LineDateDto> userPoolStateLine(long userid) {
+    public List<LineDateDto> userBzzPoolStateLine(long userid) {
         List<UserSwarmLine> userSwarmLines = swarmDao.userPoolStateLine(userid);
         List<LineDateDto> lineDateDtoList = new ArrayList<>();
         //TODO 0没有做处理 ?? userbzz 没用
@@ -201,8 +207,8 @@ public class SwarmServiceImpl implements SwarmService {
             }
             LineDateDto lineDateDto = new LineDateDto();
             lineDateDto.setDate(userSwarmLine.getDate());
-            lineDateDto.setCashout(String.valueOf(single_node_cashout.multiply(new BigDecimal(userSwarmLine.getUser_nodes_num()))));
-            lineDateDto.setCheques(String.valueOf(single_node_bzz.multiply(new BigDecimal(userSwarmLine.getUser_nodes_num()))));
+            lineDateDto.setCashout(String.valueOf(single_node_cashout.multiply(new BigDecimal(userSwarmLine.getUser_nodes_num())).toPlainString()));
+            lineDateDto.setCheques(String.valueOf(single_node_bzz.multiply(new BigDecimal(userSwarmLine.getUser_nodes_num())).toPlainString()));
             lineDateDtoList.add(lineDateDto);
         }
         return lineDateDtoList;
@@ -257,9 +263,145 @@ public class SwarmServiceImpl implements SwarmService {
         return swarmTokensTotal;
     }
 
+    @Override
+    public UserTokenPoolDto userTokenPreview(long userid, SinglePramDto singlePramDto) {
+        UserTokenPoolDto userTokenPoolDto = new UserTokenPoolDto();
+        SwarmTokens swarmTokens = swarmTokensDao.queryById(Integer.valueOf(singlePramDto.getDoid()));
+        switch (swarmTokens.getTokenname()){
+            case "BZZ":
+                BzzUserPoolUnit bzzUserPoolUnit = this.userPoolState(userid);
+                userTokenPoolDto.setBzzUserPool(bzzUserPoolUnit);
+                break;
+            case "XCH":
+                XchUserPool xchUserPool = this.xchUserPoolState(userid,swarmTokens);
+                userTokenPoolDto.setXchUserPool(xchUserPool);
+                break;
+        }
+         return userTokenPoolDto;
+    }
+
+    @Override
+    public UserTokenLineDto userTokenPoolStateLine(long userid, SinglePramDto singlePramDto) {
+        UserTokenLineDto userTokenLineDto = new UserTokenLineDto();
+        SwarmTokens swarmTokens = swarmTokensDao.queryById(Integer.valueOf(singlePramDto.getDoid()));
+        switch (swarmTokens.getTokenname()){
+            case "BZZ":
+                List<LineDateDto> lineDateDtoList = this.userBzzPoolStateLine(userid);
+                userTokenLineDto.setBzzLine(lineDateDtoList);
+                break;
+            case "XCH":
+                List<XchLineDataDto> xchUserPool = this.userXchPoolStateLine(userid,swarmTokens);
+                userTokenLineDto.setXchLine(xchUserPool);
+                break;
+        }
+        return userTokenLineDto;
+    }
+
+    private List<XchLineDataDto> userXchPoolStateLine(long userid, SwarmTokens swarmTokens) {
+        List<XchLineDataDto> lineDataDtos =  new ArrayList<>();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.DATE, -1);
+        Date dend = c.getTime();
+        String end = sdf.format(dend);//前一天
+        c.add(Calendar.DATE, -29);
+        Date dstart = c.getTime();
+        String start = sdf.format(dstart);
+        System.out.println(start+end);
+        List<XchUserDay> xchUserPool = xchUserDayDao.getUserXchDayPoolLine(userid,start,end);
+        if(xchUserPool.size()<30){
+            Calendar d = Calendar.getInstance();
+            d.setTime(new Date());
+            d.add(Calendar.DATE, -31);
+            for (int i = 1; i < 31; i++) {
+                d.add(Calendar.DATE, +1);
+                Date fx = d.getTime();
+                String nowdata = sdf .format(fx);
+                System.out.println(nowdata);
+                BigDecimal cashout = new BigDecimal(0);
+                for(XchUserDay xchUserDay:xchUserPool){
+                    if(xchUserDay.getDate().equals(nowdata)){
+                        cashout = new BigDecimal(xchUserDay.getCashout()).divide(new BigDecimal(Math.pow(10,
+                                swarmTokens.getGcd())),swarmTokens.getGcd(),BigDecimal.ROUND_HALF_UP);
+                    }
+                }
+                XchLineDataDto xchLineDataDto = new XchLineDataDto();
+                xchLineDataDto.setDate(nowdata);
+                xchLineDataDto.setCashout(cashout.toPlainString());
+                lineDataDtos.add(xchLineDataDto);
+            }
+        }
+        return lineDataDtos;
+    }
+
+    public static void main(String[] args) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.DATE, -1);
+        Date start = c.getTime();
+        String beforday = sdf.format(start);//前一天
+
+        c.add(Calendar.DATE, -29);
+        Date startx = c.getTime();
+        String beforday30 = sdf.format(startx);
+
+        System.out.println(beforday30+"/"+beforday);
+        Calendar d = Calendar.getInstance();
+        d.setTime(new Date());
+        d.add(Calendar.DATE, -30);
+        Date fx = d.getTime();
+        System.out.println(sdf.format(fx));
+        for (int i = 1; i < 30; i++) {
+            d.add(Calendar.DATE, +1);
+             fx = d.getTime();
+            System.out.println(sdf.format(fx));
+        }
+    }
+
+    private XchUserPool xchUserPoolState(long userid,SwarmTokens swarmTokens) {
+        XchUserPool xchUserPool = new XchUserPool();
+        //总收益 //农田总量  //农田大小 //昨日产出  //昨日本地产出
+        UserWallet userWallet = userWalletDao.getWalletByUserIdAndTokenId(userid,String.valueOf(swarmTokens.getId()));
+        if(userWallet==null){
+            return new XchUserPool();
+        }
+        XchUser xchUser = xchUserDao.findByUserId(userid);
+        if(xchUser==null){
+            xchUser =new XchUser();
+            xchUser.setFramjson("[]");
+            xchUser.setFramnum(0l);
+            xchUser.setFramsize(0l);
+        }
+        BigDecimal usertotal =
+                new BigDecimal(userWallet.getCashout().add(
+                        userWallet.getBalance())).divide(new BigDecimal(Math.pow(10,swarmTokens.getGcd())),
+                        swarmTokens.getGcd(),BigDecimal.ROUND_HALF_UP);
+        xchUserPool.setTotalcash(usertotal.toPlainString());
+        xchUserPool.setFramsize(StringUtils.longToString(userWallet.getUnitnum()));
+        xchUserPool.setFramnum(StringUtils.longToString(xchUser.getFramnum()));
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        Calendar c = Calendar.getInstance();
+        c.setTime(new Date());
+        c.add(Calendar.DATE, -1);
+        Date start = c.getTime();
+        String beforday= sdf.format(start);//前一天
+        XchUserDay xchUserDay = xchUserDayDao.getUserXchDay(userid,beforday);
+        if(xchUserDay==null){
+            xchUserDay = new XchUserDay();
+            xchUserDay.setCashout(new BigInteger("0"));
+        }
+        xchUserPool.setYesterdaycash(new BigDecimal(xchUserDay.getCashout()).divide(new BigDecimal(Math.pow(10,
+                swarmTokens.getGcd())),
+                swarmTokens.getGcd(),BigDecimal.ROUND_HALF_UP).toPlainString());
+        xchUserPool.setYesterdaylocal("0");//TODO
+        return xchUserPool;
+    }
+
 //    @Override
 //    public ResultJson useNodesAdd(UserNodeUpdateDto userNodeUpdateDto, long userid) {
-//        //查询是否存在该节点该节点是否存在关系
+//        //查询是否存在该节点该节点是否存在关系h
 //        int num = swarmDao.findNodeByAddress(userNodeUpdateDto.getNode_uid());
 //        if(num<=0){
 //            return ResultJson.failure("节点不存在");
@@ -335,7 +477,7 @@ public class SwarmServiceImpl implements SwarmService {
 //      return mongoTemplate.findAndRemove(query, UserLoginInfo.class);
 
 
-    public static void main(String[] args) throws ParseException, IOException {
+    public static void mainx(String[] args) throws ParseException, IOException {
         String jsonstr = HttpUtil.doGet("https://api2.chiaexplorer.com/chart/xchTibDay?period=2w");
         JSONObject jso =   JSONObject.parseObject(jsonstr);
         JSONArray jsa = jso.getJSONArray("timestamp");

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.nixer.nprox.dao.XchUserDao">
+
+    <resultMap type="com.nixer.nprox.entity.XchUser" id="XchUserMap">
+        <result property="id" column="id" jdbcType="INTEGER"/>
+        <result property="userid" column="userid" jdbcType="INTEGER"/>
+        <result property="framnum" column="framnum" jdbcType="INTEGER"/>
+        <result property="framjson" column="framjson" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!--查询单个-->
+    <select id="queryById" resultMap="XchUserMap">
+        select id,
+               userid,
+               framnum,
+               framjson
+        from nprox.xch_user
+        where id = #{id}
+    </select>
+
+    <!--查询指定行数据-->
+    <select id="queryAllByLimit" resultMap="XchUserMap">
+        select id,
+               userid,
+               framnum,
+               framjson
+        from nprox.xch_user limit #{offset}, #{limit}
+    </select>
+
+    <!--通过实体作为筛选条件查询-->
+    <select id="queryAll" resultMap="XchUserMap">
+        select
+        id, userid, framnum, framjson
+        from nprox.xch_user
+        <where>
+            <if test="id != null">
+                and id = #{id}
+            </if>
+            <if test="userid != null">
+                and userid = #{userid}
+            </if>
+            <if test="framnum != null">
+                and framnum = #{framnum}
+            </if>
+            <if test="framjson != null and framjson != ''">
+                and framjson = #{framjson}
+            </if>
+        </where>
+    </select>
+    <select id="findByUserId" resultType="com.nixer.nprox.entity.XchUser">
+        select  * from  xch_user where userid = #{userid}
+    </select>
+
+    <!--新增所有列-->
+    <insert id="insert" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.xch_user(userid, framnum, framjson)
+        values (#{userid}, #{framnum}, #{framjson})
+    </insert>
+
+    <insert id="insertBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.xch_user(userid, framnum, framjson)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.framnum}, #{entity.framjson})
+        </foreach>
+    </insert>
+
+    <insert id="insertOrUpdateBatch" keyProperty="id" useGeneratedKeys="true">
+        insert into nprox.xch_user(userid, framnum, framjson)
+        values
+        <foreach collection="entities" item="entity" separator=",">
+            (#{entity.userid}, #{entity.framnum}, #{entity.framjson})
+        </foreach>
+        on duplicate key update
+        userid = values(userid) , framnum = values(framnum) , framjson = values(framjson)
+    </insert>
+
+    <!--通过主键修改数据-->
+    <update id="update">
+        update nprox.xch_user
+        <set>
+            <if test="userid != null">
+                userid = #{userid},
+            </if>
+            <if test="framnum != null">
+                framnum = #{framnum},
+            </if>
+            <if test="framjson != null and framjson != ''">
+                framjson = #{framjson},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <!--通过主键删除-->
+    <delete id="deleteById">
+        delete
+        from nprox.xch_user
+        where id = #{id}
+    </delete>
+
+</mapper>
+

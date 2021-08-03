@@ -1,6 +1,7 @@
 package com.nixer.nprox.controller.swarm;
 
 import com.github.pagehelper.PageInfo;
+import com.nixer.nprox.entity.SwarmTokenTotal;
 import com.nixer.nprox.entity.common.Role;
 import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.entity.common.dto.*;
@@ -328,6 +329,12 @@ public class UserControler {
         UserDetail userDetail = authService.getUserByToken(token);
         return  swarmService.activeWallet(userDetail.getId(),activeWalletDto);
     }
+
+
+
+
+
+
 
 
 }

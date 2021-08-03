@@ -46,39 +46,9 @@ public class SwarmController {
     @Autowired
     private AuthService authService;
 
-    //访问上面节点信息
-    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
-    @PostMapping("/userPoolState")
-    @ApiOperation(value = "获取用户当前矿池状态")
-    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson<UserPoolUnit> userPoolState(HttpServletRequest request){
-        String token = request.getHeader(tokenHeader);
-        if (token == null) {
-            return ResultJson.failure(ResultCode.UNAUTHORIZED);
-        }
-        UserDetail userDetail = authService.getUserByToken(token);
-        long userid = userDetail.getId();//userid
-        UserPoolUnit userPoolUnit = swarmService.userPoolState(userid);
-        return ResultJson.ok(userPoolUnit);
-    }
 
 
-    //折线图
-    //柱状图
-    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
-    @PostMapping("/userPoolStateLine")
-    @ApiOperation(value = "获取用户七日矿池状态/暂定7日后续可以修改为访问值")
-    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
-    public ResultJson<List<LineDateDto>> userPoolStateLine(HttpServletRequest request){
-        String token = request.getHeader(tokenHeader);
-        if (token == null) {
-            return ResultJson.failure(ResultCode.UNAUTHORIZED);
-        }
-        UserDetail userDetail = authService.getUserByToken(token);
-        long userid = userDetail.getId();//userid
-        List<LineDateDto> lineDateDtoList = swarmService.userPoolStateLine(userid);
-        return ResultJson.ok(lineDateDtoList);
-    }
+
     //节点列表
     @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
     @PostMapping("/userNodesList")
