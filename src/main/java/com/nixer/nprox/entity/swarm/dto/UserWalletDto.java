@@ -129,7 +129,8 @@ public class UserWalletDto {
 
     public String getUnitnum() {
         if(unitgcd!=0){
-            BigDecimal nb = new BigDecimal(this.tunitnum/unitgcd).divide(new BigDecimal(1),2,BigDecimal.ROUND_HALF_UP);
+            BigDecimal nb = new BigDecimal(this.tunitnum).divide(new BigDecimal(unitgcd)).divide(new BigDecimal(1),2,
+                    BigDecimal.ROUND_HALF_UP);
             return nb.toPlainString();
         }else {
             return this.tunitnum.toString();
@@ -159,5 +160,10 @@ public class UserWalletDto {
     public static void main(String[] args) {
         System.out.println(new BigDecimal(new BigInteger("1")).divide(new BigDecimal(new BigInteger(
                 "1000000000000000000000000")),18,BigDecimal.ROUND_HALF_UP).toPlainString());
+
+        BigDecimal nb = new BigDecimal(1800).divide(new BigDecimal(1024)).divide(new BigDecimal(1),2,BigDecimal.ROUND_CEILING);
+        System.out.println(nb.toPlainString());
+
+
     }
 }
