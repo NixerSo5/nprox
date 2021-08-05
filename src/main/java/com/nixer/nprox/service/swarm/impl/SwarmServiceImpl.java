@@ -132,7 +132,11 @@ public class SwarmServiceImpl implements SwarmService {
         //今日没有数据添加昨天数据来做
         if(swarmUserDay==null){
             SwarmUserDayExt  oldswarmUserDay = swarmDao.getSwarmUserDay(userid,beforday);
-            swarmUserDayDto.setNode_num(oldswarmUserDay.getNode_num());
+            if(oldswarmUserDay!=null){
+                swarmUserDayDto.setNode_num(oldswarmUserDay.getNode_num());
+            }else{
+                swarmUserDayDto.setNode_num(0);
+            }
             swarmUserDayDto.setBzz(new BigDecimal(0));
             swarmUserDayDto.setCash_out(0);
             swarmUserDayDto.setDate(sdf.format(new Date()));
@@ -267,15 +271,17 @@ public class SwarmServiceImpl implements SwarmService {
     public UserTokenPoolDto userTokenPreview(long userid, SinglePramDto singlePramDto) {
         UserTokenPoolDto userTokenPoolDto = new UserTokenPoolDto();
         SwarmTokens swarmTokens = swarmTokensDao.queryById(Integer.valueOf(singlePramDto.getDoid()));
-        switch (swarmTokens.getTokenname()){
-            case "BZZ":
-                BzzUserPoolUnit bzzUserPoolUnit = this.userPoolState(userid);
-                userTokenPoolDto.setBzzUserPool(bzzUserPoolUnit);
-                break;
-            case "XCH":
-                XchUserPool xchUserPool = this.xchUserPoolState(userid,swarmTokens);
-                userTokenPoolDto.setXchUserPool(xchUserPool);
-                break;
+        if(swarmTokens!=null){
+            switch (swarmTokens.getTokenname()){
+                case "BZZ":
+                    BzzUserPoolUnit bzzUserPoolUnit = this.userPoolState(userid);
+                    userTokenPoolDto.setBzzUserPool(bzzUserPoolUnit);
+                    break;
+                case "XCH":
+                    XchUserPool xchUserPool = this.xchUserPoolState(userid,swarmTokens);
+                    userTokenPoolDto.setXchUserPool(xchUserPool);
+                    break;
+            }
         }
          return userTokenPoolDto;
     }
