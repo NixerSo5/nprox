@@ -69,6 +69,14 @@
         swarm_tokens
         where  1=1
     </select>
+    <select id="tokenDetail" resultType="com.nixer.nprox.entity.SwarmTokens" >
+        SELECT
+            *
+        FROM
+            swarm_tokens
+        where
+            id = #{id}
+    </select>
 
     <!--新增所有列-->
     <insert id="insert" keyProperty="id" useGeneratedKeys="true">

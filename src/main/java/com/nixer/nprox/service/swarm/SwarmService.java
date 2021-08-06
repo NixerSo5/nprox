@@ -40,4 +40,6 @@ public interface SwarmService {
     UserTokenPoolDto userTokenPreview(long userid, SinglePramDto singlePramDto);
 
     UserTokenLineDto userTokenPoolStateLine(long userid, SinglePramDto singlePramDto);
+
+    SwarmTokens tokenDetail(WalletInfoDto walletInfoDto);
 }

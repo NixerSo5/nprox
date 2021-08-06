@@ -303,6 +303,11 @@ public class SwarmServiceImpl implements SwarmService {
         return userTokenLineDto;
     }
 
+    @Override
+    public SwarmTokens tokenDetail(WalletInfoDto walletInfoDto) {
+        return swarmTokensDao.tokenDetail(walletInfoDto.getTokenid());
+    }
+
     private List<XchLineDataDto> userXchPoolStateLine(long userid, SwarmTokens swarmTokens) {
         List<XchLineDataDto> lineDataDtos =  new ArrayList<>();
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");

@@ -1,6 +1,8 @@
 package com.nixer.nprox.dao;
 
 import com.nixer.nprox.entity.SwarmTokens;
+import com.nixer.nprox.entity.swarm.dto.WalletInfoDto;
+import io.swagger.models.auth.In;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -83,5 +85,7 @@ public interface SwarmTokensDao {
     int deleteById(Integer id);
 
     List<SwarmTokens> tokensList(long userid, Integer state);
+
+    SwarmTokens tokenDetail(int id);
 }
 

@@ -8,6 +8,7 @@ import com.nixer.nprox.entity.SwarmTokenTotal;
 import com.nixer.nprox.entity.SwarmTokens;
 import com.nixer.nprox.entity.common.UserDetail;
 import com.nixer.nprox.entity.common.dto.PageFindDto;
+import com.nixer.nprox.entity.common.dto.SinglePramDto;
 import com.nixer.nprox.entity.swarm.SwarmDay;
 import com.nixer.nprox.entity.swarm.SwarmNodes;
 import com.nixer.nprox.entity.swarm.SwarmUserTotal;
@@ -99,6 +100,21 @@ public class SwarmController {
         return ResultJson.ok(swarmNodesPageInfo);
     }
 
+
+
+    @PreAuthorize("hasAnyRole('USER','AGENT')") // 只能user角色才能访问该方法
+    @PostMapping("/tokenDetail")
+    @ApiOperation(value = "token详情")
+    @ApiImplicitParams({@ApiImplicitParam(name = "Authorization", value = "Authorization token",defaultValue = "Bearer ", required = true, dataType = "string", paramType = "header")})
+    public ResultJson<SwarmTokens> tokenDetail(HttpServletRequest request, @RequestBody WalletInfoDto walletInfoDto){
+        String token = request.getHeader(tokenHeader);
+        if (token == null) {
+            return ResultJson.failure(ResultCode.UNAUTHORIZED);
+        }
+        UserDetail userDetail = authService.getUserByToken(token);
+        SwarmTokens swarmTokens = swarmService.tokenDetail(walletInfoDto);
+        return ResultJson.ok(swarmTokens);
+    }
 
 //    //新增节点
 //    @PreAuthorize("hasAnyRole('USER')") // 只能user角色才能访问该方法
