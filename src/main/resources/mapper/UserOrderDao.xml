@@ -171,5 +171,11 @@
         where id = #{id}
     </delete>
 
+    <select id="userOrderList" resultMap="UserOrderMap">
+        select  * from  user_order  where  userid =#{userid}
+        <if test="state != -1">
+            AND `status` = #{state}
+        </if>
+    </select>
 </mapper>
 
