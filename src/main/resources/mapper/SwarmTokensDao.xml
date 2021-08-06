@@ -14,13 +14,7 @@
 
     <!--查询单个-->
     <select id="queryById" resultMap="SwarmTokensMap">
-        select id,
-               tokenname,
-               tokenimgurl,
-               cashoutlimit,
-               basenodelimit,
-               cut,
-               gcd
+        select *
         from nprox.swarm_tokens
         where id = #{id}
     </select>

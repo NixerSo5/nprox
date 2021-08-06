@@ -37,11 +37,20 @@ public class SwarmTokens implements Serializable {
     @ApiModelProperty(value="小数位数")
     private Integer gcd;
 
-
-
     @ApiModelProperty(value="单位")
     private String unit;
 
+    @ApiModelProperty(hidden = true)
+    private Integer unitgcd;
+
+
+    public Integer getUnitgcd() {
+        return unitgcd;
+    }
+
+    public void setUnitgcd(Integer unitgcd) {
+        this.unitgcd = unitgcd;
+    }
 
     public Integer getId() {
         return id;

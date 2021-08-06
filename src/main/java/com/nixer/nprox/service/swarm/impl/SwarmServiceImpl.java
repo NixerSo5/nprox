@@ -390,7 +390,9 @@ public class SwarmServiceImpl implements SwarmService {
                         userWallet.getBalance())).divide(new BigDecimal(Math.pow(10,swarmTokens.getGcd())),
                         swarmTokens.getGcd(),BigDecimal.ROUND_HALF_UP);
         xchUserPool.setTotalcash(usertotal.toPlainString());
-        xchUserPool.setFramsize(StringUtils.longToString(userWallet.getUnitnum()));
+        BigDecimal nsize = new BigDecimal(userWallet.getUnitnum()).divide(new BigDecimal(swarmTokens.getUnitgcd()),2,
+                BigDecimal.ROUND_HALF_UP);
+        xchUserPool.setFramsize(nsize.toPlainString());
         xchUserPool.setFramnum(StringUtils.longToString(xchUser.getFramnum()));
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Calendar c = Calendar.getInstance();
