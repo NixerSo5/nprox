@@ -19,7 +19,7 @@
     </select>
     <select id="getUserXchDayPoolLine" resultType="com.nixer.nprox.entity.XchUserDay">
         <![CDATA[
-          SELECT * FROM xch_user_day WHERE userid = #{userid} AND  utime>#{start}  and utime<#{end} order by utime asc
+          SELECT * FROM xch_user_day WHERE userid = #{userid} AND  utime >= #{start}  and utime <= #{end} order by utime asc
         ]]>
     </select>
 

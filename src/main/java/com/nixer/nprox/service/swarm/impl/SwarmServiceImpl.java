@@ -313,10 +313,10 @@ public class SwarmServiceImpl implements SwarmService {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Calendar c = Calendar.getInstance();
         c.setTime(new Date());
-        c.add(Calendar.DATE, -1);
+        c.add(Calendar.DATE, +1);
         Date dend = c.getTime();
         String end = sdf.format(dend);//前一天
-        c.add(Calendar.DATE, -29);
+        c.add(Calendar.DATE, -30);
         Date dstart = c.getTime();
         String start = sdf.format(dstart);
         System.out.println(start+end);
