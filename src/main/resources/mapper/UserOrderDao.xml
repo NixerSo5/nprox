@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.nixer.nprox.dao.UserOrderDao">
 
-    <resultMap type="com.nixer.nprox.entity.UserOrder" id="UserOrderMap">
+    <resultMap type="com.nixer.nprox.entity.swarm.UserOrder" id="UserOrderMap">
         <result property="id" column="id" jdbcType="INTEGER"/>
         <result property="userid" column="userid" jdbcType="INTEGER"/>
         <result property="serviceType" column="service_type" jdbcType="INTEGER"/>
