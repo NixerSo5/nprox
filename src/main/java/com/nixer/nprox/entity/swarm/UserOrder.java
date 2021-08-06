@@ -42,6 +42,13 @@ public class UserOrder implements Serializable {
     @ApiModelProperty(value="手续费")
     private BigDecimal serviceCharges;
 
+    @ApiModelProperty(value="实际到账金额")
+    private BigDecimal amount;
+
+    @ApiModelProperty(value="抽成比例%")
+    private Long cut;
+
+
     @ApiModelProperty(value="收款地址")
     private String withdrawAddress;
 
@@ -176,5 +183,21 @@ public class UserOrder implements Serializable {
 
     public void setServiceCharges(BigDecimal serviceCharges) {
         this.serviceCharges = serviceCharges;
+    }
+
+    public BigDecimal getAmount() {
+        return amount;
+    }
+
+    public Long getCut() {
+        return cut;
+    }
+
+    public void setCut(Long cut) {
+        this.cut = cut;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
     }
 }

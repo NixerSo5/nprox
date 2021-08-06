@@ -207,7 +207,10 @@ public class UserOrderServiceImpl implements UserOrderService {
 //        AgentUser agentUser = agentUserDao.getUserCharges(userid,agent.getId());
 //
 //        BigDecimal serviceCharges = userOrderDto.getWithdrawNum().multiply(new BigDecimal(agentUser.getCharges()*0.01));
-        userOrder.setServiceCharges(new BigDecimal(swarmTokens.getCut()/100));
+        BigDecimal cut = userOrderDto.getWithdrawNum().multiply(new BigDecimal(swarmTokens.getCut()/100));
+        userOrder.setServiceCharges(cut);
+        userOrder.setCut(swarmTokens.getCut());
+        userOrder.setAmount(userOrderDto.getWithdrawNum().subtract(cut));
         userOrder.setStatus(0);
         userOrder.setTokenid(swarmTokens.getId());
         userOrder.setRemarks(userOrderDto.getRemarks());

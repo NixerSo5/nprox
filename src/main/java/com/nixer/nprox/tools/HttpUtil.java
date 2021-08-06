@@ -3,6 +3,7 @@ package com.nixer.nprox.tools;
 import com.alibaba.fastjson.JSONObject;
 import com.ning.http.client.AsyncHttpClient;
 import com.ning.http.client.Response;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.ParseException;
@@ -56,18 +57,18 @@ public class HttpUtil {
     }
 
     public static String doGet(String url,Boolean proxy){
-       return doOne(url,"GET",null,proxy);
+       return doOne(url,"GET",null,proxy,null);
     }
     public static String doGet(String url){
-        return doOne(url,"GET",null,false);
+        return doOne(url,"GET",null,false,null);
     }
     public static String doPost(String url,Boolean proxy){
-        return doOne(url,"POST",null,proxy);
+        return doOne(url,"POST",null,proxy,null);
     }
     public static String doPost(String url){
-        return doOne(url,"POST",null,false);
+        return doOne(url,"POST",null,false,null);
     }
-    public static String doOne(String url,String methed,Object data,Boolean isproxy)  {
+    public static String doOne(String url,String methed,Object data,Boolean isproxy,Header[] headers)  {
         // 获得Http客户端(可以理解为:你得先有一个浏览器;注意:实际上HttpClient与浏览器是不一样的)
         HttpHost proxy = new HttpHost("127.0.0.1", 7890);
 
@@ -114,13 +115,18 @@ public class HttpUtil {
                     httpPost.setHeader("Content-Type", "application/json");
                     httpPost.setEntity(new StringEntity(JSONObject.toJSONString(data), ContentType.create("application/json", "utf-8")));
                 }
+                if(headers!=null){
+                    httpPost.setHeaders(headers);
+                }
                 response = httpclient.execute(httpPost);
                 System.out.println("==========================httpGetsend=================="+url+methed+data+isproxy);
             }else{
+                if(headers!=null){
+                    httpGet.setHeaders(headers);
+                }
                 httpGet.setHeader("Content-Type", "application/json");
                 httpGet.setHeader("User-Agent",
                         "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
-
                 System.out.println("==========================httpGetsend=================="+url+methed+data+isproxy);
                 response = httpclient.execute(httpGet,localContext);
             }
@@ -432,5 +438,14 @@ public class HttpUtil {
             }
         }
         return result;
+    }
+
+    public static String headerPost(String url,Object data, Header[] headers) {
+        //String url,String methed,Object data,Boolean isproxy
+       return  doOne(url,"POST",data,false,headers);
+    }
+
+    public static String headerGet(String url, Header[] headers) {
+        return  doOne(url,"GET",null,false,headers);
     }
 }
